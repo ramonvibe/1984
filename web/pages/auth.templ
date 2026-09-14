@@ -1,0 +1,70 @@
+package pages
+
+import "github.com/ramon/trackline/web/layouts"
+import "github.com/ramon/trackline/web/components"
+
+templ Auth(setup bool, csrf, message string) {
+	@layouts.Document("Welcome", csrf) {
+		<main id="main" class="auth-page">
+			<a class="brand" href="/"><span class="brand-mark">t</span>Trackline</a>
+			<section class="auth-card">
+				<p class="eyebrow">SMALL TEAM. BIG IDEAS.</p>
+				if setup {
+					<h1>Create your workspace</h1>
+					<p class="muted">A calm place to build what comes next.</p>
+				} else {
+					<h1>Welcome back</h1>
+					<p class="muted">Your team's work, all in one place.</p>
+				}
+				if message!="" {
+					<div class="form-error" role="alert">{ message }</div>
+				}
+				<form method="post" action={ authAction(setup) } class="stack">
+					@components.CSRF(csrf)
+					if setup {
+						<label>Workspace name<input name="workspace" required maxlength="120" placeholder="Your team"/></label>
+						<label>Your name<input name="name" required maxlength="120" autocomplete="name"/></label>
+					}
+					<label>Email<input name="email" type="email" required maxlength="254" autocomplete="email"/></label>
+					<label>Password<input name="password" type="password" required minlength={ passwordMinimum(setup) } maxlength="256" autocomplete={ passwordAutocomplete(setup) }/></label>
+					if setup {
+						<small class="muted">Use at least 12 characters. You'll be the workspace admin.</small>
+					}
+					<button class="button primary full" type="submit">
+						if setup {
+							Create workspace 
+						} else {
+							Sign in 
+						}
+					</button>
+				</form>
+			</section>
+			<p class="auth-footer">Everything a small software team needs.<br/>Nothing it doesn't.</p>
+		</main>
+	}
+}
+
+func authAction(setup bool) string {
+	if setup {
+		return "/setup"
+	}
+	return "/login"
+}
+func passwordMinimum(setup bool) string {
+	if setup {
+		return "12"
+	}
+	return "1"
+}
+func passwordAutocomplete(setup bool) string {
+	if setup {
+		return "new-password"
+	}
+	return "current-password"
+}
+
+templ Error(base layouts.Data, status int, message string) {
+	@layouts.Shell(base, "Something went wrong") {
+		<div class="empty-state"><h1>{ message }</h1><p>Your change was not saved. Return to the previous page and try again.</p><a class="button" href="/">Back to dashboard</a></div>
+	}
+}

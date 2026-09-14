@@ -1,0 +1,81 @@
+package pages
+
+import (
+	"fmt"
+	"github.com/ramon/trackline/internal/activity"
+	"github.com/ramon/trackline/internal/database"
+	"github.com/ramon/trackline/internal/format"
+	"github.com/ramon/trackline/internal/issue"
+	"github.com/ramon/trackline/web/components"
+	"github.com/ramon/trackline/web/layouts"
+)
+
+templ Dashboard(data DashboardData) {
+	@layouts.Shell(data.Base, "Dashboard") {
+		<div class="page-heading"><div><p class="eyebrow">WORKSPACE OVERVIEW</p><h1>Let's make progress.</h1><p class="muted">A little focus. A lot of good work.</p></div><a class="button primary" href="/projects">View projects <span aria-hidden="true">↗</span></a></div>
+		<div class="stats-grid">
+			@components.Stat("Open issues", fmt.Sprint(data.Stats.OpenIssues))
+			@components.Stat("Completed issues", fmt.Sprint(data.Stats.CompletedIssues))
+			@components.Stat("Open bugs", fmt.Sprint(data.Stats.OpenBugs))
+			@components.Stat("Time tracked", format.Duration(data.Stats.TrackedSeconds))
+		</div>
+		<div class="dashboard-grid">
+			<section class="panel recent-panel">
+				<div class="panel-heading"><h2>Recent issues</h2><a href="/projects" class="subtle-link">All projects ↗</a></div>
+				if len(data.Recent)==0 {
+					@components.Empty("A fresh start", "Create a project and add your first issue to get moving.")
+				}
+				for _, item := range data.Recent {
+					<a class="issue-row" href={ templ.SafeURL("/issues/" + issue.Reference(item.ProjectKey, item.Number)) }>
+						<span class="mono muted">{ issue.Reference(item.ProjectKey,item.Number) }</span><strong>{ item.Title }</strong>
+						@components.Badge(item.Status)
+						<span class="muted tiny">
+							{ format.Relative(item.UpdatedAt.Time) }
+						</span>
+					</a>
+				}
+			</section>
+			<section class="panel release-spotlight">
+				<div class="panel-heading"><h2>Current release</h2><span class="live-dot"></span></div>
+				if data.Release.ID==0 {
+					@components.Empty("What's next?", "Set a release to Active to follow its progress here.")
+				} else {
+					<p class="eyebrow">{ data.Release.ProjectKey }</p><a class="release-version" href={ templ.SafeURL(fmt.Sprintf("/releases/%d", data.Release.ID)) }>{ data.Release.Version }</a>
+					<p>{ data.Release.Name }</p>
+					@components.Progress(data.Release.DoneCount, data.Release.IssueCount)
+					<div class="release-target"><span class="muted">Target date</span><strong>{ components.Date(data.Release.TargetDate) }</strong></div>
+				}
+			</section>
+		</div>
+		<div class="charts-grid">
+			@components.Bars("Time by member", data.Groups["member"])
+			@components.Bars("Time by project", data.Groups["project"])
+			@components.Bars("Time by issue type", data.Groups["type"])
+			@components.Bars("Time by release", data.Groups["release"])
+		</div>
+		<section class="panel">
+			<div class="panel-heading"><h2>Recent activity</h2><span class="muted tiny">Across your workspace</span></div>
+			@RecentActivity(data.Activity)
+		</section>
+	}
+}
+
+templ RecentActivity(items []database.ListRecentActivityRow) {
+	if len(items)==0 {
+		<p class="muted chart-empty">Your team's activity will appear here.</p>
+	}
+	<ol class="timeline">
+		for _, item := range items {
+			<li>
+				<span class="timeline-dot"></span>
+				<div>
+					<strong>{ components.Text(item.ActorName,"GitHub") }</strong> { activity.Human(item.Kind,item.Data) }
+					if item.IssueID.Valid {
+						<a class="subtle-link" href={ templ.SafeURL("/issues/" + issue.Reference(item.ProjectKey.String, item.IssueNumber.Int32)) }>{ issue.Reference(item.ProjectKey.String,item.IssueNumber.Int32) }</a>
+					}
+					<time class="muted tiny" datetime={ item.CreatedAt.Time.Format("2006-01-02T15:04:05Z07:00") }>{ format.Relative(item.CreatedAt.Time) }</time>
+				</div>
+			</li>
+		}
+	</ol>
+}

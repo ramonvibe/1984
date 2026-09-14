@@ -1,0 +1,46 @@
+package pages
+
+import (
+ "fmt"
+ "github.com/ramon/trackline/web/components"
+)
+
+templ SprintToolbar(data ProjectData) {
+ <div class="sprint-toolbar">
+  <form method="get" action={ "/projects/"+data.Project.Key+"/board" } class="inline-form">
+   <label>Sprint
+    <select name="sprint">
+     <option value="0" selected?={ data.SprintID==0 }>All issues</option>
+     <option value="-1" selected?={ data.SprintID==-1 }>No sprint</option>
+     for _, sprint := range data.Sprints {
+      <option value={ fmt.Sprint(sprint.ID) } selected?={ data.SprintID==sprint.ID }>{ sprint.Name }</option>
+     }
+    </select>
+   </label>
+   <button class="button">Apply</button>
+  </form>
+  <details class="sprint-create">
+   <summary class="button">Create new sprint</summary>
+   <form method="post" action={ "/projects/"+data.Project.Key+"/sprints" } class="panel stack">
+    @components.CSRF(data.Base.CSRF)
+    <label>Name (optional)<input name="name" maxlength="120" placeholder="Sprint name"/></label>
+    <div class="form-grid">
+     <label>Start date<input type="date" name="start_date" required min="0001-01-01" max="9999-12-31"/></label>
+     <label>End date<input type="date" name="end_date" required min="0001-01-01" max="9999-12-31"/></label>
+    </div>
+    <small class="muted">Duration includes both dates.</small>
+    <button class="button primary">Create sprint</button>
+   </form>
+  </details>
+ </div>
+ for _, sprint := range data.Sprints {
+  if sprint.ID==data.SprintID {
+   <div class="panel sprint-summary">
+    <strong>{ sprint.Name }</strong>
+    <span>{ components.Date(sprint.StartDate) } – { components.Date(sprint.EndDate) }</span>
+    <span>{ fmt.Sprintf("%d days",(sprint.EndDate.Time.Unix()-sprint.StartDate.Time.Unix())/86400+1) }</span>
+    <small class="muted">Open an issue and select its Sprint to add it here.</small>
+   </div>
+  }
+ }
+}

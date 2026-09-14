@@ -1,0 +1,345 @@
+package pages
+
+import (
+	"fmt"
+	"github.com/ramon/trackline/internal/activity"
+	"github.com/ramon/trackline/internal/format"
+	"github.com/ramon/trackline/internal/issue"
+	"github.com/ramon/trackline/web/components"
+	"github.com/ramon/trackline/web/layouts"
+	"time"
+)
+
+templ Issue(data IssueData) {
+	@layouts.Shell(data.Base, issue.Reference(data.Item.ProjectKey, data.Item.Number)) {
+		@IssueDetail(data)
+	}
+}
+
+templ IssueDetail(data IssueData) {
+	<div id="issue-detail">
+		<div class="issue-breadcrumb"><a href={ templ.SafeURL("/projects/" + data.Item.ProjectKey + "/issues") }>{ data.Item.ProjectName }</a><span>/</span><span class="mono">{ issue.Reference(data.Item.ProjectKey,data.Item.Number) }</span></div>
+		<div class="issue-layout">
+			<article class="issue-main">
+				<div class="issue-heading">
+					<h1>{ data.Item.Title }</h1>
+					<details class="edit-title">
+						<summary class="subtle-link">Edit title</summary>
+						<form method="post" action={ issueAction(data) } hx-post={ issueAction(data) } hx-target="#issue-detail" hx-swap="outerHTML" class="inline-form">
+							@components.CSRF(data.Base.CSRF)
+							<input name="title" required maxlength="240" value={ data.Item.Title } aria-label="Issue title"/><button class="button small-button">Save</button>
+						</form>
+					</details>
+				</div>
+				<div class="issue-badges">
+					@components.Badge(data.Item.Type)
+					@components.Priority(data.Item.Priority)
+					@components.Badge(data.Item.Status)
+				</div>
+				<section class="issue-section">
+					<div class="section-heading"><h2>Description</h2></div>
+					if data.Item.Description=="" {
+						<p class="muted">Give this issue a little context.</p>
+					} else {
+						<div class="markdown">
+							@format.Markdown(data.Item.Description)
+						</div>
+					}
+					<details>
+						<summary class="subtle-link">Edit description</summary>
+						<form method="post" action={ issueAction(data) } hx-post={ issueAction(data) } hx-target="#issue-detail" hx-swap="outerHTML" class="stack">
+							@components.CSRF(data.Base.CSRF)
+							<textarea name="description" maxlength="50000" rows="8" aria-label="Issue description">{ data.Item.Description }</textarea>
+							<div><button class="button primary small-button">Save description</button><small class="muted">Simple Markdown supported</small></div>
+						</form>
+					</details>
+				</section>
+				<section class="issue-section">
+					<div class="section-heading"><h2>Development</h2><span class="muted tiny">{ fmt.Sprintf("%d PRs · %d commits",len(data.PRs),len(data.Commits)) }</span></div>
+					if len(data.PRs)==0 && len(data.Commits)==0 {
+						<div class="development-empty"><span aria-hidden="true">⑂</span><p>Connect your work.<small>Reference <code>{ issue.Reference(data.Item.ProjectKey,data.Item.Number) }</code> in commits and pull requests.</small></p></div>
+					}
+					for _, pr := range data.PRs {
+						<a class="development-row" href={ pr.Url } target="_blank" rel="noopener noreferrer">
+							<span class="mono">#{ fmt.Sprint(pr.Number) }</span><strong>{ pr.Title }</strong>
+							<span class={ "badge",templ.KV("badge-merged",pr.Merged) }>
+								if pr.Merged {
+									Merged ✓ 
+								} else {
+									{ pr.State }
+								}
+							</span>
+						</a>
+					}
+					for _, commit := range data.Commits {
+						<a class="development-row" href={ commit.Url } target="_blank" rel="noopener noreferrer"><code>{ shortSHA(commit.Sha) }</code><span class="line-clamp">{ commit.Message }</span></a>
+					}
+				</section>
+				<section class="issue-section">
+					<div class="section-heading"><h2>Time tracking</h2><strong>{ format.Duration(data.Spent) } spent</strong></div>
+					<div class="time-actions">
+						if data.Base.Timer.IssueID==data.Item.ID {
+							<form method="post" action={ issueAction(data) + "/time" }>
+								@components.CSRF(data.Base.CSRF)
+								<input type="hidden" name="action" value="stop"/><button class="button timer-stop"><span class="live-dot"></span>Stop timer</button>
+							</form>
+						} else if data.Base.Timer.ID!=0 {
+							<p class="muted">Timer running on <a href={ templ.SafeURL("/issues/" + issue.Reference(data.Base.Timer.ProjectKey, data.Base.Timer.IssueNumber)) }>{ issue.Reference(data.Base.Timer.ProjectKey,data.Base.Timer.IssueNumber) }</a>.</p>
+						} else {
+							<form method="post" action={ issueAction(data) + "/time" }>
+								@components.CSRF(data.Base.CSRF)
+								<input type="hidden" name="action" value="start"/><button class="button">▷ Start timer</button>
+							</form>
+						}
+						<span class="muted tiny">Estimated { format.Minutes(data.Item.EstimatedMinutes) }</span>
+					</div>
+					<details class="manual-time">
+						<summary class="subtle-link">+ Add time manually</summary>
+						<form method="post" action={ issueAction(data) + "/time" } class="stack">
+							@components.CSRF(data.Base.CSRF)
+							<input type="hidden" name="action" value="manual"/>
+							<div class="form-grid">
+								<label>Minutes<input type="number" name="minutes" min="1" max="1440" required placeholder="60"/></label>
+								<label>
+									Date (UTC)<input
+	type="date"
+	name="date"
+	required
+	value={ time.Now().UTC().Format("2006-01-02") }
+	max={ time.Now().UTC().Format("2006-01-02") }
+/>
+								</label>
+							</div><label>What did you work on?<input name="description" maxlength="2000"/></label>
+							<div><button class="button">Add time</button></div>
+						</form>
+					</details>
+					<div class="time-summary">
+						for _, member := range data.TimeSummary {
+							<div><span class="avatar small">{ layouts.Initial(member.Name) }</span><span>{ member.Name }</span><strong>{ format.Duration(member.Seconds) }</strong></div>
+						}
+					</div>
+					if len(data.Time)>0 {
+						<details>
+							<summary class="subtle-link">Time entries</summary>
+							<div class="table-scroll">
+								<table>
+									<thead><tr><th>Member</th><th>Date</th><th>Duration</th><th>Description</th></tr></thead>
+									<tbody>
+										for _, entry := range data.Time {
+											<tr>
+												<td>{ entry.UserName }</td>
+												<td>{ entry.StartedAt.Time.UTC().Format("Jan 2") }</td>
+												<td>
+													if entry.EndedAt.Valid {
+														{ format.Duration(int64(entry.DurationSeconds.Int32)) }
+													} else {
+														Running 
+													}
+												</td>
+												<td>{ entry.Description }</td>
+											</tr>
+										}
+									</tbody>
+								</table>
+							</div>
+						</details>
+					}
+				</section>
+				<section class="issue-section">
+					<div class="section-heading"><h2>Comments</h2><span class="muted tiny">{ fmt.Sprint(len(data.Comments)) }</span></div>
+					for _, comment := range data.Comments {
+						<article class="comment">
+							<span class="avatar">{ layouts.Initial(comment.UserName) }</span>
+							<div class="comment-body">
+								<header><strong>{ comment.UserName }</strong><time class="muted tiny">{ format.Relative(comment.CreatedAt.Time) }</time></header>
+								<div class="markdown">
+									@format.Markdown(comment.Body)
+								</div>
+							</div>
+						</article>
+					}
+					<form method="post" action={ issueAction(data) + "/comments" } hx-post={ issueAction(data) + "/comments" } hx-target="#issue-detail" hx-swap="outerHTML" class="stack comment-form">
+						@components.CSRF(data.Base.CSRF)
+						<label class="sr-only" for="comment-body">Write a comment</label><textarea id="comment-body" name="body" required rows="3" maxlength="10000" placeholder="Leave a comment…"></textarea>
+						<div class="card-bottom"><small class="muted">Simple Markdown supported</small><button class="button primary">Comment</button></div>
+					</form>
+				</section>
+				<section class="issue-section">
+					<div class="section-heading"><h2>Activity</h2></div>
+					<ol class="timeline">
+						for _, event := range data.Activity {
+							<li><span class="timeline-dot"></span><div><strong>{ components.Text(event.ActorName,"GitHub") }</strong> { activity.Human(event.Kind,event.Data) }<time class="muted tiny">{ format.Relative(event.CreatedAt.Time) }</time></div></li>
+						}
+					</ol>
+				</section>
+			</article>
+			<aside class="issue-properties" aria-label="Issue properties">
+				<form method="post" action={ issueAction(data)+"/sprint" } hx-post={ issueAction(data)+"/sprint" } hx-trigger="change" hx-target="#issue-detail" hx-swap="outerHTML" class="quick-edit">
+					@components.CSRF(data.Base.CSRF)
+					<label>Sprint
+						<select name="sprint_id">
+							<option value="" selected?={ !data.Item.SprintID.Valid }>No sprint</option>
+							for _, sprint := range data.Sprints {
+								<option value={ fmt.Sprint(sprint.ID) } selected?={ data.Item.SprintID.Int64==sprint.ID }>{ sprint.Name }</option>
+							}
+						</select>
+					</label>
+					<button class="button small">Save</button>
+				</form>
+				<h2>Properties</h2>
+				for _, field := range []struct{
+name,label,value string; options []string}{{"status","Status",data.Item.Status,issue.Statuses},{"type","Type",data.Item.Type,issue.Types},{"priority","Priority",data.Item.Priority,issue.Priorities}} {
+					<form method="post" action={ issueAction(data) } hx-post={ issueAction(data) } hx-trigger="change" hx-target="#issue-detail" hx-swap="outerHTML" class="quick-edit">
+						@components.CSRF(data.Base.CSRF)
+						<label>
+							{ field.label }
+							@components.Select(field.name, field.value, field.options)
+						</label><button class="property-save" aria-label={ "Save " + field.label }>Save</button>
+					</form>
+				}
+				<form method="post" action={ issueAction(data) } hx-post={ issueAction(data) } hx-trigger="change" hx-target="#issue-detail" hx-swap="outerHTML" class="quick-edit">
+					@components.CSRF(data.Base.CSRF)
+					<label>
+						Assignee
+						<select name="assignee_id">
+							<option value="">Unassigned</option>
+							for _, user := range data.Users {
+								<option selected?={ data.Item.AssigneeID.Int64==user.ID } value={ fmt.Sprint(user.ID) }>{ user.Name }</option>
+							}
+						</select>
+					</label><button class="property-save">Save</button>
+				</form>
+				<form method="post" action={ issueAction(data) } hx-post={ issueAction(data) } hx-trigger="change" hx-target="#issue-detail" hx-swap="outerHTML" class="quick-edit">
+					@components.CSRF(data.Base.CSRF)
+					<label>
+						Release
+						<select name="release_id">
+							<option value="">No release</option>
+							for _, item := range data.Releases {
+								<option selected?={ data.Item.ReleaseID.Int64==item.ID } value={ fmt.Sprint(item.ID) }>{ item.Version }</option>
+							}
+						</select>
+					</label><button class="property-save">Save</button>
+				</form>
+				<form method="post" action={ issueAction(data) } hx-post={ issueAction(data) } hx-target="#issue-detail" hx-swap="outerHTML" class="quick-edit">
+					@components.CSRF(data.Base.CSRF)
+					<label>
+						Estimate (minutes)<input
+	type="number"
+	min="0"
+	max="525600"
+	name="estimated_minutes"
+	value={ fmt.Sprint(data.Item.EstimatedMinutes) }
+/>
+					</label><button class="property-save">Save</button>
+				</form>
+				<div class="property-section">
+					<h3>Labels</h3>
+					<div class="labels">
+						for _, label := range data.SelectedLabels {
+							<span class="label">{ label.Name }</span>
+						}
+					</div>
+					<details>
+						<summary class="subtle-link">Edit labels</summary>
+						<form method="post" action={ issueAction(data) } hx-post={ issueAction(data) } hx-target="#issue-detail" hx-swap="outerHTML" class="stack">
+							@components.CSRF(data.Base.CSRF)
+							<input type="hidden" name="labels_present" value="true"/>
+							for _, label := range data.Labels {
+								<label class="checkbox-label"><input type="checkbox" name="label_id" value={ fmt.Sprint(label.ID) } checked?={ components.HasLabel(data.SelectedLabels,label.ID) }/>{ label.Name }</label>
+							}
+							<button class="button small-button">Save labels</button>
+						</form>
+					</details>
+				</div>
+				<div class="property-section">
+					<h3>Dates</h3>
+					<form method="post" action={ issueAction(data) } hx-post={ issueAction(data) } hx-target="#issue-detail" hx-swap="outerHTML" class="stack">
+						@components.CSRF(data.Base.CSRF)
+						<label>
+							Start date<input
+	type="date"
+	name="start_date"
+	value={ components.DateInput(data.Item.StartDate) }
+/>
+						</label><label>Due date<input type="date" name="due_date" value={ components.DateInput(data.Item.DueDate) }/></label><button class="button small-button">Save dates</button>
+					</form>
+				</div>
+				<div class="property-section muted tiny">
+					<p>Reported by { data.Item.ReporterName }</p>
+					<p>Created { format.Date(data.Item.CreatedAt.Time) }</p>
+					<p>Updated { format.Relative(data.Item.UpdatedAt.Time) }</p>
+					if data.Item.ClosedAt.Valid {
+						<p>Closed { format.Date(data.Item.ClosedAt.Time) }</p>
+					}
+				</div>
+			</aside>
+		</div>
+	</div>
+}
+
+func issueAction(data IssueData) string {
+	return "/issues/" + issue.Reference(data.Item.ProjectKey, data.Item.Number)
+}
+func shortSHA(value string) string {
+	if len(value) > 7 {
+		return value[:7]
+	}
+	return value
+}
+
+templ NewIssue(data NewIssueData) {
+	@layouts.Shell(data.Base, "New issue") {
+		<div class="page-heading"><div><p class="eyebrow">{ data.Project.Name }</p><h1>Create an issue</h1><p class="muted">Start with a title. Details can follow.</p></div></div>
+		<section class="panel form-panel wide">
+			<form method="post" action={ "/projects/" + data.Project.Key + "/issues" } class="stack">
+				@components.CSRF(data.Base.CSRF)
+				<label>Title<input name="title" required autofocus maxlength="240" placeholder="What needs to happen?"/></label>
+				<label>Description<textarea name="description" rows="7" maxlength="50000" placeholder="Context, expected behavior, or a few useful details…"></textarea></label>
+				<div class="form-grid">
+					<label>
+						Type 
+						@components.Select("type", "task", issue.Types)
+					</label>
+					<label>
+						Status 
+						@components.Select("status", "backlog", issue.Statuses)
+					</label>
+					<label>
+						Priority 
+						@components.Select("priority", "medium", issue.Priorities)
+					</label>
+					<label>
+						Assignee
+						<select name="assignee_id">
+							<option value="">Unassigned</option>
+							for _, user := range data.Users {
+								<option value={ fmt.Sprint(user.ID) }>{ user.Name }</option>
+							}
+						</select>
+					</label>
+				</div>
+				<details>
+					<summary class="subtle-link">Release, dates, estimate and labels</summary>
+					<div class="form-grid">
+						<label>
+							Release
+							<select name="release_id">
+								<option value="">No release</option>
+								for _, item := range data.Releases {
+									<option value={ fmt.Sprint(item.ID) }>{ item.Version }</option>
+								}
+							</select>
+						</label><label>Estimate (minutes)<input type="number" name="estimated_minutes" value="0" min="0" max="525600"/></label><label>Start date<input type="date" name="start_date"/></label><label>Due date<input type="date" name="due_date"/></label>
+					</div><input type="hidden" name="labels_present" value="true"/>
+					<div class="labels label-picker">
+						for _, label := range data.Labels {
+							<label class="checkbox-label"><input type="checkbox" name="label_id" value={ fmt.Sprint(label.ID) }/>{ label.Name }</label>
+						}
+					</div>
+				</details>
+				<div class="card-bottom"><a class="button" href={ templ.SafeURL("/projects/" + data.Project.Key + "/issues") }>Cancel</a><button class="button primary">Create issue</button></div>
+			</form>
+		</section>
+	}
+}

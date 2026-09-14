@@ -1,0 +1,162 @@
+package components
+
+import (
+	"fmt"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/ramon/trackline/internal/database"
+	"github.com/ramon/trackline/internal/format"
+	"github.com/ramon/trackline/internal/issue"
+	"strings"
+)
+
+func Name(value string) string {
+	names := map[string]string{"in_progress": "In Progress", "todo": "Todo", "backlog": "Backlog", "done": "Done", "review": "Review", "canceled": "Canceled", "bug": "Bug", "feature": "Feature", "improvement": "Improvement", "task": "Task", "low": "Low", "medium": "Medium", "high": "High", "urgent": "Urgent", "planning": "Planning", "active": "Active", "released": "Released", "archived": "Archived"}
+	if name, ok := names[value]; ok {
+		return name
+	}
+	return value
+}
+func DateInput(value pgtype.Date) string {
+	if !value.Valid {
+		return ""
+	}
+	return value.Time.Format("2006-01-02")
+}
+func Date(value pgtype.Date) string {
+	if !value.Valid {
+		return "No date"
+	}
+	return value.Time.Format("Jan 2, 2006")
+}
+func ID(value pgtype.Int8) string {
+	if !value.Valid {
+		return ""
+	}
+	return fmt.Sprint(value.Int64)
+}
+func Text(value pgtype.Text, fallback string) string {
+	if !value.Valid || value.String == "" {
+		return fallback
+	}
+	return value.String
+}
+func Percent(done, total int64) int {
+	if total == 0 {
+		return 0
+	}
+	return int(done * 100 / total)
+}
+func Labels(value any) []string {
+	text, ok := value.(string)
+	if !ok {
+		text = fmt.Sprint(value)
+	}
+	if text == "" || text == "<nil>" {
+		return nil
+	}
+	return strings.Split(text, ",")
+}
+func HasLabel(labels []database.Label, id int64) bool {
+	for _, label := range labels {
+		if label.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+templ CSRF(token string) {
+	<input type="hidden" name="csrf" value={ token }/>
+}
+
+templ Badge(value string) {
+	<span class={ "badge badge-" + value }><span class="status-dot"></span>{ Name(value) }</span>
+}
+
+templ Priority(value string) {
+	<span class={ "priority priority-" + value } title={ Name(value) + " priority" }>{ Name(value) }</span>
+}
+
+templ Select(name, value string, options []string) {
+	<select name={ name } aria-label={ Name(strings.ReplaceAll(name, "_", " ")) }>
+		for _, option := range options {
+			<option value={ option } selected?={ value==option }>{ Name(option) }</option>
+		}
+	</select>
+}
+
+templ Empty(title, description string) {
+	<div class="empty-state"><span class="empty-icon" aria-hidden="true">◇</span><h3>{ title }</h3><p>{ description }</p></div>
+}
+
+templ Stat(label, value string) {
+	<div class="stat"><span>{ label }</span><strong>{ value }</strong></div>
+}
+
+templ Progress(done, total int64) {
+	<div class="progress-label"><span>{ fmt.Sprintf("%d of %d complete",done,total) }</span><strong>{ fmt.Sprint(Percent(done,total)) }%</strong></div>
+	<progress value={ fmt.Sprint(done) } max={ fmt.Sprint(max(total, 1)) } aria-label="Release progress"></progress>
+}
+
+templ Bars(title string, rows []database.ReportGroupsRow) {
+	<section class="panel">
+		<div class="panel-heading"><h3>{ title }</h3><span class="muted tiny">Tracked time</span></div>
+		if len(rows)==0 {
+			<p class="muted chart-empty">No time tracked yet.</p>
+		}
+		for _, row := range rows {
+			<div class="bar-row"><div><span>{ Name(row.Label) }</span><strong>{ format.Duration(row.Seconds) }</strong></div><progress value={ fmt.Sprint(row.Seconds) } max={ fmt.Sprint(max(rows[0].Seconds, 1)) } aria-label={ row.Label }></progress></div>
+		}
+	</section>
+}
+
+templ ProjectTabs(key, active string) {
+	<nav class="tabs" aria-label="Project views">
+		for _, tab := range []struct{
+slug,title string}{{"","Overview"},{"issues","Issues"},{"board","Board"},{"calendar","Calendar"},{"releases","Releases"},{"time","Time"},{"settings","Settings"}} {
+			<a href={ templ.SafeURL(strings.TrimRight("/projects/"+key+"/"+tab.slug, "/")) } class={ templ.KV("active", active == tab.slug) } aria-current={ current(active == tab.slug) }>{ tab.title }</a>
+		}
+	</nav>
+}
+
+func current(active bool) string {
+	if active {
+		return "page"
+	}
+	return "false"
+}
+
+templ IssueCard(item database.ListBoardIssuesRow) {
+	<article id={ fmt.Sprintf("issue-card-%d", item.ID) } class="issue-card" draggable="true" data-issue={ issue.Reference(item.ProjectKey, item.Number) }>
+		<div class="card-meta">
+			<span class="mono">{ issue.Reference(item.ProjectKey,item.Number) }</span>
+			@Priority(item.Priority)
+		</div>
+		<a class="card-title" href={ templ.SafeURL("/issues/" + issue.Reference(item.ProjectKey, item.Number)) }>{ item.Title }</a>
+		<div class="labels">
+			for _, label := range Labels(item.LabelNames) {
+				<span class="label">{ label }</span>
+			}
+		</div>
+		<div class="card-bottom">
+			@Badge(item.Type)
+			<span class="card-assignee" title={ Text(item.AssigneeName, "Unassigned") }>
+				<span class="avatar small" aria-hidden="true">{ initial(FirstName(Text(item.AssigneeName,"—"))) }</span>
+				<span class="assignee-name">{ FirstName(Text(item.AssigneeName,"Unassigned")) }</span>
+			</span>
+		</div>
+	</article>
+}
+
+func initial(value string) string {
+	for _, r := range value {
+		return string(r)
+	}
+	return "—"
+}
+
+func FirstName(value string) string {
+	parts := strings.Fields(value)
+	if len(parts) == 0 { return "Unassigned" }
+	return parts[0]
+}

@@ -1,0 +1,6 @@
+/.env
+/.trackline/
+/trackline
+/tmp/
+*.log
+

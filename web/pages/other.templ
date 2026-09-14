@@ -1,0 +1,155 @@
+package pages
+
+import (
+	"fmt"
+	"github.com/ramon/trackline/internal/calendar"
+	"github.com/ramon/trackline/internal/database"
+	"github.com/ramon/trackline/internal/format"
+	"github.com/ramon/trackline/internal/issue"
+	"github.com/ramon/trackline/web/components"
+	"github.com/ramon/trackline/web/layouts"
+)
+
+templ Calendar(base layouts.Data, month calendar.Month) {
+	@layouts.Shell(base, "Calendar") {
+		<div class="page-heading"><div><p class="eyebrow">THE BIG PICTURE</p><h1>Calendar</h1><p class="muted">Issue dates and release milestones, together.</p></div></div>
+		@CalendarView(month)
+	}
+}
+
+templ CalendarView(month calendar.Month) {
+	<section class="panel calendar-panel">
+		<div class="panel-heading"><h2>{ month.Title }</h2><div class="inline-form"><a class="button small-button" href={ templ.SafeURL("?month=" + month.Previous) } aria-label="Previous month">←</a><a class="button small-button" href="?">Today</a><a class="button small-button" href={ templ.SafeURL("?month=" + month.Next) } aria-label="Next month">→</a></div></div>
+		<div class="calendar-scroll">
+			<div class="calendar">
+				for _, day := range []string{
+"Mon","Tue","Wed","Thu","Fri","Sat","Sun"} {
+					<div class="weekday">{ day }</div>
+				}
+				for _, day := range month.Days {
+					<div class={ "calendar-day",templ.KV("outside",!day.Current),templ.KV("today",day.Today) }>
+						<time datetime={ day.Date.Format("2006-01-02") }>{ fmt.Sprint(day.Date.Day()) }</time>
+						for _, event := range day.Events {
+							<a class={ "calendar-event event-" + event.Kind } href={ templ.SafeURL(event.URL) } title={ event.Kind + ": " + event.Title }><small>{ event.Kind }</small>{ event.Title }</a>
+						}
+					</div>
+				}
+			</div>
+		</div>
+	</section>
+}
+
+templ TimeReports(base layouts.Data, groups map[string][]database.ReportGroupsRow, from, to string) {
+	@layouts.Shell(base, "Time reports") {
+		<div class="page-heading"><div><p class="eyebrow">WHERE THE TIME GOES</p><h1>Time reports</h1><p class="muted">Understand the effort behind your team's work.</p></div></div>
+		@Reports(groups, nil, from, to)
+	}
+}
+
+templ Reports(groups map[string][]database.ReportGroupsRow, estimates []database.ProjectTimeReportRow, from, to string) {
+	<form method="get" class="panel report-filter inline-form"><label>From (UTC)<input type="date" name="from" value={ from }/></label><label>To (UTC)<input type="date" name="to" value={ to }/></label><button class="button primary">Apply period</button><a class="button" href="?">All time</a></form>
+	<p class="muted tiny">Entries are counted by their start date. Running timers are included. Up to 200 groups per report.</p>
+	<div class="charts-grid">
+		@components.Bars("Time by member", groups["member"])
+		@components.Bars("Time by project", groups["project"])
+		@components.Bars("Time by issue type", groups["type"])
+		@components.Bars("Time by release", groups["release"])
+	</div>
+	@components.Bars("Time by issue", groups["issue"])
+	if len(estimates)>0 {
+		<section class="panel">
+			<div class="panel-heading"><h2>Estimated vs spent</h2></div>
+			<div class="table-scroll">
+				<table>
+					<thead><tr><th>Issue</th><th>Estimated</th><th>Spent</th><th>Difference</th></tr></thead>
+					<tbody>
+						for _, row := range estimates {
+							<tr><td><a href={ templ.SafeURL("/issues/" + issue.Reference(row.ProjectKey, row.Number)) }>{ issue.Reference(row.ProjectKey,row.Number) } · { row.Title }</a></td><td>{ format.Minutes(row.EstimatedMinutes) }</td><td>{ format.Duration(row.SpentSeconds) }</td><td>{ difference(row.SpentSeconds-int64(row.EstimatedMinutes)*60) }</td></tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</section>
+	}
+}
+
+func difference(value int64) string {
+	if value < 0 {
+		return "-" + format.Duration(-value)
+	}
+	return "+" + format.Duration(value)
+}
+
+templ Settings(data SettingsData) {
+	@layouts.Shell(data.Base, "Workspace settings") {
+		<div class="page-heading"><div><p class="eyebrow">{ data.Base.User.WorkspaceName }</p><h1>Workspace settings</h1><p class="muted">Good defaults. A few useful controls.</p></div></div>
+		<section class="panel">
+			<div class="panel-heading"><h2>People</h2><span class="muted tiny">{ fmt.Sprint(len(data.Users)) } members</span></div>
+			<div class="table-scroll">
+				<table>
+					<thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+					<tbody>
+						for _, user := range data.Users {
+							<tr><td>{ user.Name }</td><td>{ user.Email }</td><td>{ user.Role }</td></tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</section>
+		if data.Base.User.Role=="admin" {
+			<details class="panel form-panel">
+				<summary>Add a user</summary>
+				<form method="post" action="/settings/users" class="stack">
+					@components.CSRF(data.Base.CSRF)
+					<div class="form-grid"><label>Name<input name="name" required maxlength="120" autocomplete="off"/></label><label>Email<input type="email" name="email" required maxlength="254" autocomplete="off"/></label><label>Password<input type="password" name="password" required minlength="12" maxlength="256" autocomplete="new-password"/></label><label>Role<select name="role"><option value="member">Member</option><option value="admin">Admin</option></select></label></div>
+					<p class="muted tiny">Share the password privately with the new user.</p>
+					<div><button class="button primary">Add user</button></div>
+				</form>
+			</details>
+		}
+		<section class="panel form-panel">
+			<div class="panel-heading"><h2>Labels</h2></div>
+			<div class="labels label-picker">
+				for _, label := range data.Labels {
+					<span class="label">{ label.Name }</span>
+				}
+			</div>
+			<form method="post" action="/settings/labels" class="inline-form">
+				@components.CSRF(data.Base.CSRF)
+				<label>New label<input name="name" required maxlength="40" placeholder="e.g. accessibility"/></label><label>Color<input type="color" name="color" value="#64748b"/></label><button class="button">Create label</button>
+			</form>
+		</section>
+		<section class="panel form-panel">
+			<div class="panel-heading"><h2>GitHub App</h2></div>
+			if data.GitHubEnabled {
+				<p class="connected">Configured. Connect a repository in each project's settings.</p>
+			} else {
+				<p class="muted">Not configured. The rest of your workspace works independently.</p>
+			}
+		</section>
+	}
+}
+
+templ Search(data SearchData) {
+	@layouts.Shell(data.Base, "Search") {
+		<div class="page-heading"><div><h1>Search</h1><p class="muted">Find an issue, project, or release.</p></div></div>
+		<form method="get" action="/search" class="search-form"><input name="q" value={ data.Query } type="search" autofocus maxlength="100" placeholder="Try an issue ID, title, project, or release…" aria-label="Search"/><button class="button primary">Search</button></form>
+		<section class="panel">
+			<div class="panel-heading"><h2>Results</h2><span class="muted">{ data.Query }</span></div>
+			if data.Query=="" {
+				@components.Empty("Find your focus", "Enter a search term above.")
+			} else if len(data.Issues)==0 && len(data.Others)==0 {
+				@components.Empty("No matches", "Try another title, project, release or issue ID.")
+			}
+			for _, item := range data.Issues {
+				<a class="issue-row" href={ templ.SafeURL("/issues/" + issue.Reference(item.ProjectKey, item.Number)) }>
+					<span class="mono muted">{ issue.Reference(item.ProjectKey,item.Number) }</span><strong>{ item.Title }</strong>
+					@components.Badge(item.Status)
+				</a>
+			}
+			for _, item := range data.Others {
+				<a class="issue-row" href={ templ.SafeURL(fmt.Sprint(item.Url)) }><span class="muted">{ item.Kind }</span><strong>{ item.Title }</strong></a>
+			}
+		</section>
+	}
+}
