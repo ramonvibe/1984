@@ -8,7 +8,9 @@ A lightweight, self-hostable issue and project tracker for small software teams.
 
 1984 is a modular Go monolith with PostgreSQL and server-rendered HTML. No Node.js, frontend build pipeline, Redis, or separate worker is required to run it.
 
-This is an early functional version. The interface and Go module still use the working name **Trackline**.
+**Status: MVP (Minimum Viable Product).** This is only the first functional version, intended to validate the core workflow and gather feedback. It is not a finished product or a production-hardened release. Features and installation options are still incomplete; see [Current limitations](#current-limitations).
+
+The interface and Go module still use the working name **Trackline**.
 
 ## Features
 

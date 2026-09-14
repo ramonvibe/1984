@@ -8,7 +8,9 @@ Um gerenciador leve de issues e projetos, auto-hospedável, para pequenas equipe
 
 1984 é um monólito modular em Go com PostgreSQL e HTML renderizado no servidor. Não exige Node.js, etapa de build de frontend, Redis nem worker separado para funcionar.
 
-Esta é uma versão funcional inicial. A interface e o módulo Go ainda utilizam o nome provisório **Trackline**.
+**Status: MVP (Produto Mínimo Viável).** Esta é apenas a primeira versão funcional, destinada a validar o fluxo principal e coletar feedback. Não é um produto finalizado nem uma versão consolidada para produção. Funcionalidades e opções de instalação ainda estão incompletas; veja as [limitações atuais](#limitações-atuais).
+
+A interface e o módulo Go ainda utilizam o nome provisório **Trackline**.
 
 ## Funcionalidades
 
