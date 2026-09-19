@@ -7,29 +7,37 @@ import (
 
 templ SprintToolbar(data ProjectData) {
  <div class="sprint-toolbar">
-  <form method="get" action={ "/projects/"+data.Project.Key+"/board" } class="inline-form">
+	<form method="post" action={ "/projects/" + data.Project.Key + "/sprints/select" } class="inline-form sprint-filter-form">
+		@components.CSRF(data.Base.CSRF)
    <label>Sprint
     <select name="sprint">
-     <option value="0" selected?={ data.SprintID==0 }>All issues</option>
-     <option value="-1" selected?={ data.SprintID==-1 }>No sprint</option>
+     <option value="0" selected?={ data.SprintID==0 }>Todas as tarefas</option>
+     <option value="-1" selected?={ data.SprintID==-1 }>Sem sprint</option>
      for _, sprint := range data.Sprints {
       <option value={ fmt.Sprint(sprint.ID) } selected?={ data.SprintID==sprint.ID }>{ sprint.Name }</option>
      }
     </select>
    </label>
-   <button class="button">Apply</button>
+		<button class="button">Aplicar filtro</button>
   </form>
+	if data.SprintID > 0 && !data.SprintStarted {
+		<form method="post" action={ "/projects/" + data.Project.Key + "/sprints/start" } class="start-sprint-form" data-sprint-id={ fmt.Sprint(data.SprintID) }>
+			@components.CSRF(data.Base.CSRF)
+			<input type="hidden" name="sprint" value={ fmt.Sprint(data.SprintID) }/>
+			<button class="button primary">Iniciar sprint</button>
+		</form>
+	}
   <details class="sprint-create">
-   <summary class="button">Create new sprint</summary>
+   <summary class="button">Criar sprint</summary>
    <form method="post" action={ "/projects/"+data.Project.Key+"/sprints" } class="panel stack">
     @components.CSRF(data.Base.CSRF)
-    <label>Name (optional)<input name="name" maxlength="120" placeholder="Sprint name"/></label>
+    <label>Nome (opcional)<input name="name" maxlength="120" placeholder="Nome da sprint"/></label>
     <div class="form-grid">
-     <label>Start date<input type="date" name="start_date" required min="0001-01-01" max="9999-12-31"/></label>
-     <label>End date<input type="date" name="end_date" required min="0001-01-01" max="9999-12-31"/></label>
+     <label>Data inicial<input type="date" name="start_date" required min="0001-01-01" max="9999-12-31"/></label>
+     <label>Data final<input type="date" name="end_date" required min="0001-01-01" max="9999-12-31"/></label>
     </div>
-    <small class="muted">Duration includes both dates.</small>
-    <button class="button primary">Create sprint</button>
+    <small class="muted">A duração inclui as duas datas.</small>
+    <button class="button primary">Criar sprint</button>
    </form>
   </details>
  </div>
@@ -38,8 +46,8 @@ templ SprintToolbar(data ProjectData) {
    <div class="panel sprint-summary">
     <strong>{ sprint.Name }</strong>
     <span>{ components.Date(sprint.StartDate) } – { components.Date(sprint.EndDate) }</span>
-    <span>{ fmt.Sprintf("%d days",(sprint.EndDate.Time.Unix()-sprint.StartDate.Time.Unix())/86400+1) }</span>
-    <small class="muted">Open an issue and select its Sprint to add it here.</small>
+    <span>{ fmt.Sprintf("%d dias",(sprint.EndDate.Time.Unix()-sprint.StartDate.Time.Unix())/86400+1) }</span>
+    <small class="muted">Abra uma tarefa e selecione a sprint para adicioná-la aqui.</small>
    </div>
   }
  }

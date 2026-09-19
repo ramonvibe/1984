@@ -1,127 +1,161 @@
 # 1984
 
-[English](README.md) · [Português brasileiro](README.pt-BR.md)
+Gerenciador de tarefas, projetos e sprints para pequenas equipes de software. A aplicação é um monólito em Go, usa PostgreSQL e renderiza HTML no servidor. Não precisa de Node.js, Redis ou processo separado de frontend.
 
-A lightweight, self-hostable issue and project tracker for small software teams.
+> Status: MVP. O fluxo principal funciona, mas o projeto ainda está em desenvolvimento e não foi consolidado para produção.
 
-> Everything a small software team needs. Nothing it doesn't.
+## Rodar pela primeira vez
 
-1984 is a modular Go monolith with PostgreSQL and server-rendered HTML. No Node.js, frontend build pipeline, Redis, or separate worker is required to run it.
+O caminho recomendado usa Docker. Você precisa apenas de:
 
-**Status: MVP (Minimum Viable Product).** This is only the first functional version, intended to validate the core workflow and gather feedback. It is not a finished product or a production-hardened release. Features and installation options are still incomplete; see [Current limitations](#current-limitations).
+- [Git](https://git-scm.com/downloads)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) no Windows ou macOS; no Linux, Docker Engine com o plugin Compose
 
-The interface and Go module still use the working name **Trackline**.
-
-## Features
-
-- Workspace onboarding; the first user becomes an admin. Admins can add members.
-- Projects with readable issue identifiers such as `PLAT-142`.
-- Bugs, features, improvements and tasks; fixed statuses and priorities.
-- Issue properties edited with HTMX, labels, Markdown comments and activity history.
-- Drag-and-drop board; cards display the assignee's first name beside their avatar.
-- Sprints with start/end dates, inclusive duration and board filtering. Assign issues through their Sprint property.
-- One active timer per user, manual time entries and estimated-versus-spent reports.
-- Dashboard and time reports by member, project, issue, type and release.
-- Calendar for issue dates and release targets; PostgreSQL-based search.
-- Releases with editable, deterministic changelog drafts from completed issues.
-- Optional GitHub App integration for linked commits/PRs and publishing GitHub Releases.
-
-## Run locally
-
-Requirements: Go 1.25 or later, PostgreSQL (tested with version 18), Git, Bash and optionally Make.
+Clone e inicie:
 
 ```bash
 git clone https://github.com/ramonvibe/1984.git
 cd 1984
+docker compose up --build
 ```
 
-Create a dedicated database and non-superuser role using a PostgreSQL administrator account. Adapt the connection options to your installation:
+Quando aparecer `1984 is ready`, abra [http://localhost:8080](http://localhost:8080). No primeiro acesso, a aplicação pedirá:
+
+1. nome do espaço de trabalho;
+2. seu nome;
+3. email;
+4. uma senha com pelo menos 12 caracteres.
+
+Essa primeira conta será administradora. As tabelas e atualizações do banco são aplicadas automaticamente ao iniciar.
+
+Para parar, pressione `Ctrl+C`. Seus dados continuam salvos no volume do PostgreSQL. Nas próximas vezes, execute:
 
 ```bash
-psql -h 127.0.0.1 -U postgres -d postgres
+docker compose up
 ```
 
-Inside `psql`:
-
-```sql
-CREATE ROLE trackline LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE;
-\password trackline
-CREATE DATABASE trackline OWNER trackline;
-REVOKE ALL ON DATABASE trackline FROM PUBLIC;
-\q
-```
-
-If another project already uses PostgreSQL, reuse the server but keep this database and role separate. Do not overwrite an existing database with the same name.
-
-Create `.env` in the repository root, replacing the example password with the one you chose. URL-encode special characters in the connection URL:
-
-```dotenv
-DATABASE_URL='postgres://trackline:YOUR_PASSWORD@127.0.0.1:5432/trackline?sslmode=disable'
-ADDR=':8080'
-BASE_URL='http://localhost:8080'
-```
+## Comandos úteis
 
 ```bash
-chmod 600 .env
+# Iniciar em segundo plano
+docker compose up -d
+
+# Ver os logs
+docker compose logs -f app
+
+# Parar
+docker compose down
+
+# Atualizar depois de um git pull
+docker compose up --build -d
+```
+
+Para apagar completamente o banco local e começar novamente:
+
+```bash
+docker compose down -v
+```
+
+Esse último comando remove permanentemente usuários, projetos, tarefas e todo o restante armazenado no ambiente local.
+
+### Porta já ocupada
+
+Se a porta `8080` estiver em uso, escolha outra antes de iniciar:
+
+```bash
+PORT=8081 docker compose up --build
+```
+
+Depois acesse `http://localhost:8081`. Se a porta `5432` do PostgreSQL estiver ocupada, use:
+
+```bash
+POSTGRES_PORT=5433 docker compose up --build
+```
+
+## Desenvolvimento sem colocar a aplicação no Docker
+
+Requisitos: Go 1.25 ou superior, Git e Bash. O Docker pode executar somente o PostgreSQL:
+
+```bash
+git clone https://github.com/ramonvibe/1984.git
+cd 1984
+docker compose up -d db
+cp .env.example .env
 make dev
-# Without Make: bash scripts/dev.sh
 ```
 
-Open [localhost:8080](http://localhost:8080), create your workspace and admin account, then create a project. The server applies pending migrations automatically. Restart `make dev` after code changes; there is no hot reload.
+Sem Make, use `bash scripts/dev.sh`. Acesse [http://localhost:8080](http://localhost:8080). Reinicie o processo após alterar código; ainda não existe recarregamento automático.
 
-`.env` is ignored by Git. The development script sources it as Bash, so only use a trusted file. `sslmode=disable` is for local development, not untrusted networks.
+O arquivo `.env` é ignorado pelo Git. `scripts/dev.sh` carrega esse arquivo como Bash, portanto use apenas conteúdo confiável.
 
-## Configuration and hosting
-
-The application reads environment variables. Only the development script loads `.env` automatically.
-
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | PostgreSQL connection URL; set explicitly for your installation. |
-| `ADDR` | HTTP listen address; default `:8080`. |
-| `BASE_URL` | Public application URL; default `http://localhost:8080`. |
-| `SECURE_COOKIES` | Defaults to true when `BASE_URL` starts with `https://`. |
-| `GITHUB_APP_ID` | Optional GitHub App ID. |
-| `GITHUB_APP_SLUG` | Optional App slug used by the installation link. |
-| `GITHUB_PRIVATE_KEY` | App RSA private key in PEM format; literal `\n` sequences are supported. |
-| `GITHUB_WEBHOOK_SECRET` | App webhook secret, at least 32 bytes. |
-
-Without GitHub configuration, the tracker works independently. Once the App is configured and installed, connect its installation ID and repository in project settings. The webhook endpoint is `POST /webhooks/github`. Keep keys and secrets outside Git.
-
-Build a single executable with embedded templates, assets and migrations:
-
-```bash
-go build -o /tmp/1984-server ./cmd/server
-# With DATABASE_URL and other variables exported:
-/tmp/1984-server -migrate
-/tmp/1984-server
-```
-
-For hosting, use HTTPS through a reverse proxy, set the public `BASE_URL`, protect database access and keep PostgreSQL backups. Complete onboarding before exposing an empty installation publicly. `GET /healthz` checks database connectivity. Review security and recovery procedures before production use.
-
-## Development
+### Testes e arquivos gerados
 
 ```bash
 go test ./...
 ```
 
-The optional sprint database integration test runs when `TEST_DATABASE_URL` is set. Use a test database whose role can create schemas; it creates and removes an isolated temporary schema.
-
-Templates and SQL query bindings are committed, so generators are not required for a normal build. After editing `.templ` files or SQL queries, regenerate the corresponding Go files:
+Templates e consultas geradas já estão versionados. Só é necessário regenerá-los ao editar seus arquivos de origem:
 
 ```bash
 go run github.com/a-h/templ/cmd/templ@v0.3.1001 generate
 go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1 generate
 ```
 
-Keep HTTP handlers in `internal/server`, business rules in the domain packages, SQL in `db/queries`, schema changes in new `db/migrations` files and presentation in `web`. Do not edit generated `*_templ.go` or query bindings manually, or change migrations already applied to a database.
+## Funcionalidades
 
-Contributions should stay small, include relevant tests and avoid unnecessary dependencies. Never commit `.env`, credentials or database dumps.
+- Interface em português brasileiro, com modo claro e escuro.
+- Espaço de trabalho com administradores e membros.
+- Projetos com códigos legíveis, como `PLAT-142`.
+- Tarefas, erros, funcionalidades e melhorias com prioridade, etiquetas, responsável e histórico.
+- Quadro com arrastar e soltar.
+- Preparação de sprint: selecione uma sprint, escolha tarefas movendo-as para **A fazer** e inicie a sprint.
+- Comentários em Markdown e vínculo opcional com commits e pull requests do GitHub.
+- Cronômetro, registros manuais e relatórios de tempo.
+- Calendário, busca, versões e geração de histórico de alterações.
 
-## Current limitations
+## Configuração
 
-- The UI is English-only; Portuguese UI translation is pending. Both README languages are available.
-- Sprint assignment is manual. Automatically assigning issues from Todo onward to the current sprint is pending.
-- Dockerfile and Docker Compose are not included yet.
-- Project membership is organizational: all workspace members can access every project. There is no per-project access control.
-- No license file has been chosen yet. Do not assume open-source redistribution rights until a license is added.
+A instalação via Docker já possui valores locais para começar. Para outra instalação, configure estas variáveis no ambiente:
+
+| Variável | Finalidade | Padrão |
+| --- | --- | --- |
+| `DATABASE_URL` | URL de conexão com PostgreSQL | banco local `trackline` |
+| `ADDR` | endereço HTTP de escuta | `:8080` |
+| `BASE_URL` | URL pública da aplicação | `http://localhost:8080` |
+| `SECURE_COOKIES` | força cookies seguros | ativo quando `BASE_URL` usa HTTPS |
+| `GITHUB_APP_ID` | ID opcional do GitHub App | vazio |
+| `GITHUB_APP_SLUG` | identificador do GitHub App | vazio |
+| `GITHUB_PRIVATE_KEY` | chave RSA do GitHub App em PEM | vazio |
+| `GITHUB_WEBHOOK_SECRET` | segredo do webhook, mínimo de 32 bytes | vazio |
+
+A integração com GitHub é opcional. Sem essas quatro variáveis, todo o restante funciona normalmente.
+
+## Publicação
+
+O `Dockerfile` gera um único executável com templates, arquivos estáticos e migrações incorporados. Para publicar:
+
+- use uma senha forte e exclusiva para o PostgreSQL;
+- defina `BASE_URL` com a URL HTTPS pública;
+- coloque a aplicação atrás de um proxy reverso com TLS;
+- não exponha a porta do PostgreSQL à internet;
+- mantenha backups do volume do banco;
+- conclua o primeiro cadastro antes de liberar uma instalação vazia publicamente.
+
+O endpoint `GET /healthz` verifica a conexão com o banco. As credenciais do `compose.yaml` destinam-se somente ao desenvolvimento local.
+
+## Organização
+
+```text
+cmd/server/       entrada da aplicação
+db/migrations/    alterações versionadas do banco
+db/queries/       consultas usadas pelo sqlc
+internal/         regras de negócio, banco e HTTP
+web/              templates, CSS e JavaScript
+```
+
+## Limitações atuais
+
+- Membros de projetos servem para organização; todos os membros do espaço de trabalho acessam todos os projetos.
+- A integração com GitHub exige criar e configurar um GitHub App manualmente.
+- Ainda não há procedimento automatizado de backup e restauração.
+- Ainda não foi escolhida uma licença. Não presuma direitos de redistribuição até a inclusão de uma licença.

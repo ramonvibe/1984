@@ -51,32 +51,32 @@ func Dashboard(data DashboardData) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"page-heading\"><div><p class=\"eyebrow\">WORKSPACE OVERVIEW</p><h1>Let's make progress.</h1><p class=\"muted\">A little focus. A lot of good work.</p></div><a class=\"button primary\" href=\"/projects\">View projects <span aria-hidden=\"true\">↗</span></a></div><div class=\"stats-grid\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"page-heading\"><div><p class=\"eyebrow\">VISÃO GERAL</p><h1>Vamos avançar.</h1><p class=\"muted\">Um pouco de foco. Muito trabalho bem feito.</p></div><a class=\"button primary\" href=\"/projects\">Ver projetos <span aria-hidden=\"true\">↗</span></a></div><div class=\"stats-grid\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.Stat("Open issues", fmt.Sprint(data.Stats.OpenIssues)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.Stat("Tarefas abertas", fmt.Sprint(data.Stats.OpenIssues)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.Stat("Completed issues", fmt.Sprint(data.Stats.CompletedIssues)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.Stat("Tarefas concluídas", fmt.Sprint(data.Stats.CompletedIssues)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.Stat("Open bugs", fmt.Sprint(data.Stats.OpenBugs)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.Stat("Erros abertos", fmt.Sprint(data.Stats.OpenBugs)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.Stat("Time tracked", format.Duration(data.Stats.TrackedSeconds)).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.Stat("Tempo registrado", format.Duration(data.Stats.TrackedSeconds)).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><div class=\"dashboard-grid\"><section class=\"panel recent-panel\"><div class=\"panel-heading\"><h2>Recent issues</h2><a href=\"/projects\" class=\"subtle-link\">All projects ↗</a></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><div class=\"dashboard-grid\"><section class=\"panel recent-panel\"><div class=\"panel-heading\"><h2>Tarefas recentes</h2><a href=\"/projects\" class=\"subtle-link\">Todos os projetos ↗</a></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(data.Recent) == 0 {
-				templ_7745c5c3_Err = components.Empty("A fresh start", "Create a project and add your first issue to get moving.").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.Empty("Um novo começo", "Crie um projeto e adicione sua primeira tarefa.").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -147,12 +147,12 @@ func Dashboard(data DashboardData) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</section><section class=\"panel release-spotlight\"><div class=\"panel-heading\"><h2>Current release</h2><span class=\"live-dot\"></span></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</section><section class=\"panel release-spotlight\"><div class=\"panel-heading\"><h2>Versão atual</h2><span class=\"live-dot\"></span></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if data.Release.ID == 0 {
-				templ_7745c5c3_Err = components.Empty("What's next?", "Set a release to Active to follow its progress here.").Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.Empty("Qual é o próximo passo?", "Marque uma versão como ativa para acompanhar o progresso aqui.").Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -217,14 +217,14 @@ func Dashboard(data DashboardData) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, " <div class=\"release-target\"><span class=\"muted\">Target date</span><strong>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, " <div class=\"release-target\"><span class=\"muted\">Data prevista</span><strong>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var11 string
 				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(components.Date(data.Release.TargetDate))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/dashboard.templ`, Line: 46, Col: 121}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/dashboard.templ`, Line: 46, Col: 123}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 				if templ_7745c5c3_Err != nil {
@@ -239,23 +239,23 @@ func Dashboard(data DashboardData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.Bars("Time by member", data.Groups["member"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.Bars("Tempo por membro", data.Groups["member"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.Bars("Time by project", data.Groups["project"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.Bars("Tempo por projeto", data.Groups["project"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.Bars("Time by issue type", data.Groups["type"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.Bars("Tempo por tipo de tarefa", data.Groups["type"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = components.Bars("Time by release", data.Groups["release"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.Bars("Tempo por versão", data.Groups["release"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div><section class=\"panel\"><div class=\"panel-heading\"><h2>Recent activity</h2><span class=\"muted tiny\">Across your workspace</span></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div><section class=\"panel\"><div class=\"panel-heading\"><h2>Atividade recente</h2><span class=\"muted tiny\">Em todo o espaço de trabalho</span></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -269,7 +269,7 @@ func Dashboard(data DashboardData) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layouts.Shell(data.Base, "Dashboard").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.Shell(data.Base, "Painel").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -299,7 +299,7 @@ func RecentActivity(items []database.ListRecentActivityRow) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if len(items) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<p class=\"muted chart-empty\">Your team's activity will appear here.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<p class=\"muted chart-empty\">A atividade da sua equipe aparecerá aqui.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

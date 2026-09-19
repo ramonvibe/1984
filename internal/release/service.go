@@ -22,8 +22,8 @@ type Service struct { Pool *pgxpool.Pool; Queries *database.Queries; GitHub *git
 var versionPattern=regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$`)
 func fields(form url.Values) (database.CreateReleaseParams,error) {
  value:=database.CreateReleaseParams{Version:strings.TrimSpace(form.Get("version")),Name:strings.TrimSpace(form.Get("name")),Description:form.Get("description"),Status:form.Get("status")}
- if !versionPattern.MatchString(value.Version) || strings.Contains(value.Version,"..") || strings.HasSuffix(value.Version,".") || strings.HasSuffix(value.Version,".lock") { return value,errors.New("version must be a valid tag using letters, numbers, dots, hyphens or underscores") }
- if len(value.Name)>120 || len(value.Description)>20000 { return value,errors.New("release name or description is too long") }
+ if !versionPattern.MatchString(value.Version) || strings.Contains(value.Version,"..") || strings.HasSuffix(value.Version,".") || strings.HasSuffix(value.Version,".lock") { return value,errors.New("a versão deve ser uma tag válida com letras, números, pontos, hífens ou sublinhados") }
+ if len(value.Name)>120 || len(value.Description)>20000 { return value,errors.New("o nome ou a descrição da versão é muito longa") }
  if value.Status=="" { value.Status="planning" }
  _,err:=validate.OneOf("release status",value.Status,Statuses...); if err!=nil { return value,err }
  value.TargetDate,err=issue.Date(form.Get("target_date")); return value,err
@@ -41,7 +41,7 @@ func (s Service) Update(ctx context.Context,user auth.User,id int64,form url.Val
  params,err:=fields(form); if err!=nil { return err }
  return database.Transaction(ctx,s.Pool,func(q *database.Queries) error {
   item,err:=q.GetRelease(ctx,database.GetReleaseParams{ID:id,WorkspaceID:user.WorkspaceID}); if err!=nil { return err }
-  if item.GithubReleaseID.Valid { return errors.New("published GitHub releases cannot be edited here") }
+  if item.GithubReleaseID.Valid { return errors.New("versões já publicadas no GitHub não podem ser editadas aqui") }
   if _,err=q.UpdateRelease(ctx,database.UpdateReleaseParams{ID:id,Version:params.Version,Name:params.Name,Description:params.Description,Status:params.Status,TargetDate:params.TargetDate}); err!=nil { return err }
   return activity.Record(ctx,q,user.WorkspaceID,item.ProjectID,0,user.ID,"release.updated",map[string]string{"title":params.Version})
  })
@@ -64,10 +64,10 @@ func Changelog(items []database.ListReleaseIssuesRow) string {
  return strings.TrimSpace(result.String())
 }
 func (s Service) Save(ctx context.Context,user auth.User,id int64,changelog string,generate bool) error {
- if len(changelog)>100000 { return errors.New("changelog is too long") }
+ if len(changelog)>100000 { return errors.New("o histórico de alterações é muito longo") }
  return database.Transaction(ctx,s.Pool,func(q *database.Queries) error {
   item,err:=q.GetRelease(ctx,database.GetReleaseParams{ID:id,WorkspaceID:user.WorkspaceID}); if err!=nil { return err }
-  locked,err:=q.LockRelease(ctx,id); if err!=nil { return err }; if locked.GithubReleaseID.Valid { return errors.New("release is already published") }
+  locked,err:=q.LockRelease(ctx,id); if err!=nil { return err }; if locked.GithubReleaseID.Valid { return errors.New("a versão já foi publicada") }
   if generate { items,err:=q.ListReleaseIssues(ctx,database.ID(id)); if err!=nil { return err }; changelog=Changelog(items) }
   if _,err=q.SaveReleaseChangelog(ctx,database.SaveReleaseChangelogParams{ID:id,Changelog:changelog}); err!=nil { return err }
   return activity.Record(ctx,q,user.WorkspaceID,item.ProjectID,0,user.ID,"release.changelog_saved",map[string]string{"title":item.Version})
@@ -75,13 +75,13 @@ func (s Service) Save(ctx context.Context,user auth.User,id int64,changelog stri
 }
 func (s Service) Publish(ctx context.Context,user auth.User,id int64) error {
  if user.Role!="admin" { return auth.ErrForbidden }
- if !s.GitHub.Enabled() { return errors.New("GitHub App is not configured") }
+ if !s.GitHub.Enabled() { return errors.New("o GitHub App não está configurado") }
  return database.Transaction(ctx,s.Pool,func(q *database.Queries) error {
   scoped,err:=q.GetRelease(ctx,database.GetReleaseParams{ID:id,WorkspaceID:user.WorkspaceID}); if err!=nil { return err }
   item,err:=q.LockRelease(ctx,id); if err!=nil { return err }
   if item.GithubReleaseID.Valid { return nil }
-  if item.Status=="canceled" || strings.TrimSpace(item.Changelog)=="" { return errors.New("save a changelog for a non-canceled release before publishing") }
-  repository,err:=q.GetGitHubRepositoryByProject(ctx,item.ProjectID); if err!=nil { return errors.New("connect a GitHub repository in project settings first") }
+  if item.Status=="canceled" || strings.TrimSpace(item.Changelog)=="" { return errors.New("salve um histórico para a versão antes de publicar") }
+  repository,err:=q.GetGitHubRepositoryByProject(ctx,item.ProjectID); if err!=nil { return errors.New("conecte primeiro um repositório GitHub nas configurações do projeto") }
   name:=item.Name; if name=="" { name=item.Version }
   // ponytail: hold one release row during a bounded HTTP call; use an outbox if publishing throughput grows.
   published,err:=s.GitHub.Publish(ctx,repository.GithubInstallationID,repository.FullName,item.Version,name,item.Changelog,item.PublicationKey); if err!=nil { return err }

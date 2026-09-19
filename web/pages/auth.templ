@@ -3,18 +3,25 @@ package pages
 import "github.com/ramon/trackline/web/layouts"
 import "github.com/ramon/trackline/web/components"
 
-templ Auth(setup bool, csrf, message string) {
-	@layouts.Document("Welcome", csrf) {
+templ Auth(setup bool, csrf, message, appName string, hasLogo bool) {
+	@layouts.Document("Painel", csrf, appName) {
 		<main id="main" class="auth-page">
-			<a class="brand" href="/"><span class="brand-mark">t</span>Trackline</a>
-			<section class="auth-card">
-				<p class="eyebrow">SMALL TEAM. BIG IDEAS.</p>
-				if setup {
-					<h1>Create your workspace</h1>
-					<p class="muted">A calm place to build what comes next.</p>
+			<a class="brand" href="/">
+				if hasLogo {
+					<img class="brand-logo" src="/brand/logo" alt=""/>
 				} else {
-					<h1>Welcome back</h1>
-					<p class="muted">Your team's work, all in one place.</p>
+					<span class="brand-mark">{ layouts.Initial(appName) }</span>
+				}
+				{ appName }
+			</a>
+			<section class="auth-card">
+				<p class="eyebrow">EQUIPE PEQUENA. GRANDES IDEIAS.</p>
+				if setup {
+					<h1>Crie seu espaço de trabalho</h1>
+					<p class="muted">Um lugar tranquilo para criar o que vem a seguir.</p>
+				} else {
+					<h1>Bem-vindo de volta</h1>
+					<p class="muted">O trabalho da sua equipe em um só lugar.</p>
 				}
 				if message!="" {
 					<div class="form-error" role="alert">{ message }</div>
@@ -22,24 +29,24 @@ templ Auth(setup bool, csrf, message string) {
 				<form method="post" action={ authAction(setup) } class="stack">
 					@components.CSRF(csrf)
 					if setup {
-						<label>Workspace name<input name="workspace" required maxlength="120" placeholder="Your team"/></label>
-						<label>Your name<input name="name" required maxlength="120" autocomplete="name"/></label>
+						<label>Nome do espaço de trabalho<input name="workspace" required maxlength="120" placeholder="Sua equipe"/></label>
+						<label>Seu nome<input name="name" required maxlength="120" autocomplete="name"/></label>
 					}
 					<label>Email<input name="email" type="email" required maxlength="254" autocomplete="email"/></label>
-					<label>Password<input name="password" type="password" required minlength={ passwordMinimum(setup) } maxlength="256" autocomplete={ passwordAutocomplete(setup) }/></label>
+					<label>Senha<input name="password" type="password" required minlength={ passwordMinimum(setup) } maxlength="256" autocomplete={ passwordAutocomplete(setup) }/></label>
 					if setup {
-						<small class="muted">Use at least 12 characters. You'll be the workspace admin.</small>
+						<small class="muted">Use pelo menos 12 caracteres. Você será o administrador.</small>
 					}
 					<button class="button primary full" type="submit">
 						if setup {
-							Create workspace 
+							Criar espaço de trabalho
 						} else {
-							Sign in 
+							Entrar
 						}
 					</button>
 				</form>
 			</section>
-			<p class="auth-footer">Everything a small software team needs.<br/>Nothing it doesn't.</p>
+			<p class="auth-footer">Tudo que uma pequena equipe de software precisa.</p>
 		</main>
 	}
 }
@@ -64,7 +71,7 @@ func passwordAutocomplete(setup bool) string {
 }
 
 templ Error(base layouts.Data, status int, message string) {
-	@layouts.Shell(base, "Something went wrong") {
-		<div class="empty-state"><h1>{ message }</h1><p>Your change was not saved. Return to the previous page and try again.</p><a class="button" href="/">Back to dashboard</a></div>
+	@layouts.Shell(base, "Algo deu errado") {
+		<div class="empty-state"><h1>{ message }</h1><p>Sua alteração não foi salva. Volte à página anterior e tente novamente.</p><a class="button" href="/">Voltar ao painel</a></div>
 	}
 }

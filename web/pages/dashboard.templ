@@ -11,19 +11,19 @@ import (
 )
 
 templ Dashboard(data DashboardData) {
-	@layouts.Shell(data.Base, "Dashboard") {
-		<div class="page-heading"><div><p class="eyebrow">WORKSPACE OVERVIEW</p><h1>Let's make progress.</h1><p class="muted">A little focus. A lot of good work.</p></div><a class="button primary" href="/projects">View projects <span aria-hidden="true">↗</span></a></div>
+	@layouts.Shell(data.Base, "Painel") {
+		<div class="page-heading"><div><p class="eyebrow">VISÃO GERAL</p><h1>Vamos avançar.</h1><p class="muted">Um pouco de foco. Muito trabalho bem feito.</p></div><a class="button primary" href="/projects">Ver projetos <span aria-hidden="true">↗</span></a></div>
 		<div class="stats-grid">
-			@components.Stat("Open issues", fmt.Sprint(data.Stats.OpenIssues))
-			@components.Stat("Completed issues", fmt.Sprint(data.Stats.CompletedIssues))
-			@components.Stat("Open bugs", fmt.Sprint(data.Stats.OpenBugs))
-			@components.Stat("Time tracked", format.Duration(data.Stats.TrackedSeconds))
+			@components.Stat("Tarefas abertas", fmt.Sprint(data.Stats.OpenIssues))
+			@components.Stat("Tarefas concluídas", fmt.Sprint(data.Stats.CompletedIssues))
+			@components.Stat("Erros abertos", fmt.Sprint(data.Stats.OpenBugs))
+			@components.Stat("Tempo registrado", format.Duration(data.Stats.TrackedSeconds))
 		</div>
 		<div class="dashboard-grid">
 			<section class="panel recent-panel">
-				<div class="panel-heading"><h2>Recent issues</h2><a href="/projects" class="subtle-link">All projects ↗</a></div>
+				<div class="panel-heading"><h2>Tarefas recentes</h2><a href="/projects" class="subtle-link">Todos os projetos ↗</a></div>
 				if len(data.Recent)==0 {
-					@components.Empty("A fresh start", "Create a project and add your first issue to get moving.")
+					@components.Empty("Um novo começo", "Crie um projeto e adicione sua primeira tarefa.")
 				}
 				for _, item := range data.Recent {
 					<a class="issue-row" href={ templ.SafeURL("/issues/" + issue.Reference(item.ProjectKey, item.Number)) }>
@@ -36,25 +36,25 @@ templ Dashboard(data DashboardData) {
 				}
 			</section>
 			<section class="panel release-spotlight">
-				<div class="panel-heading"><h2>Current release</h2><span class="live-dot"></span></div>
+				<div class="panel-heading"><h2>Versão atual</h2><span class="live-dot"></span></div>
 				if data.Release.ID==0 {
-					@components.Empty("What's next?", "Set a release to Active to follow its progress here.")
+					@components.Empty("Qual é o próximo passo?", "Marque uma versão como ativa para acompanhar o progresso aqui.")
 				} else {
 					<p class="eyebrow">{ data.Release.ProjectKey }</p><a class="release-version" href={ templ.SafeURL(fmt.Sprintf("/releases/%d", data.Release.ID)) }>{ data.Release.Version }</a>
 					<p>{ data.Release.Name }</p>
 					@components.Progress(data.Release.DoneCount, data.Release.IssueCount)
-					<div class="release-target"><span class="muted">Target date</span><strong>{ components.Date(data.Release.TargetDate) }</strong></div>
+					<div class="release-target"><span class="muted">Data prevista</span><strong>{ components.Date(data.Release.TargetDate) }</strong></div>
 				}
 			</section>
 		</div>
 		<div class="charts-grid">
-			@components.Bars("Time by member", data.Groups["member"])
-			@components.Bars("Time by project", data.Groups["project"])
-			@components.Bars("Time by issue type", data.Groups["type"])
-			@components.Bars("Time by release", data.Groups["release"])
+			@components.Bars("Tempo por membro", data.Groups["member"])
+			@components.Bars("Tempo por projeto", data.Groups["project"])
+			@components.Bars("Tempo por tipo de tarefa", data.Groups["type"])
+			@components.Bars("Tempo por versão", data.Groups["release"])
 		</div>
 		<section class="panel">
-			<div class="panel-heading"><h2>Recent activity</h2><span class="muted tiny">Across your workspace</span></div>
+			<div class="panel-heading"><h2>Atividade recente</h2><span class="muted tiny">Em todo o espaço de trabalho</span></div>
 			@RecentActivity(data.Activity)
 		</section>
 	}
@@ -62,7 +62,7 @@ templ Dashboard(data DashboardData) {
 
 templ RecentActivity(items []database.ListRecentActivityRow) {
 	if len(items)==0 {
-		<p class="muted chart-empty">Your team's activity will appear here.</p>
+		<p class="muted chart-empty">A atividade da sua equipe aparecerá aqui.</p>
 	}
 	<ol class="timeline">
 		for _, item := range items {

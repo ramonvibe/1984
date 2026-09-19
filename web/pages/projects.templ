@@ -11,8 +11,8 @@ import (
 )
 
 templ Projects(base layouts.Data) {
-	@layouts.Shell(base, "Projects") {
-		<div class="page-heading"><div><p class="eyebrow">MAKE ROOM FOR GOOD WORK</p><h1>Projects</h1><p class="muted">From the first idea to the next release.</p></div></div>
+	@layouts.Shell(base, "Projetos") {
+		<div class="page-heading"><div><p class="eyebrow">ESPAÇO PARA UM BOM TRABALHO</p><h1>Projetos</h1><p class="muted">Da primeira ideia à próxima versão.</p></div></div>
 		<div class="project-grid">
 			for _, project := range base.Projects {
 				<a class="panel project-tile" href={ templ.SafeURL("/projects/" + project.Key) }>
@@ -25,23 +25,23 @@ templ Projects(base layouts.Data) {
 					<div class="card-bottom">
 						<span class="mono muted">{ project.Key }</span>
 						<span>
-							{ fmt.Sprintf("%d open · %d done",project.OpenIssues,project.DoneIssues) }
+							{ fmt.Sprintf("%d abertas · %d concluídas",project.OpenIssues,project.DoneIssues) }
 						</span>
 					</div>
 				</a>
 			}
 		</div>
 		if len(base.Projects)==0 {
-			@components.Empty("Your next project starts here", "Give your project a name and a short key, like PLAT.")
+			@components.Empty("Seu próximo projeto começa aqui", "Dê um nome e uma sigla curta ao projeto, como PLAT.")
 		}
 		if base.User.Role=="admin" {
 			<section class="panel form-panel">
-				<div class="panel-heading"><h2>Create a project</h2></div>
+				<div class="panel-heading"><h2>Criar projeto</h2></div>
 				<form method="post" action="/projects" class="stack">
 					@components.CSRF(base.CSRF)
-					<div class="form-grid"><label>Project name<input name="name" required maxlength="120" placeholder="Platform"/></label><label>Key<input name="key" required pattern="[A-Za-z][A-Za-z0-9]{1,9}" maxlength="10" placeholder="PLAT"/><small class="muted">2–10 letters or numbers. Used in issue IDs.</small></label></div>
-					<label>Description<textarea name="description" rows="3" maxlength="20000" placeholder="What are you building?"></textarea></label>
-					<div><button class="button primary">Create project</button></div>
+					<div class="form-grid"><label>Nome do projeto<input name="name" required maxlength="120" placeholder="Plataforma"/></label><label>Sigla<input name="key" required pattern="[A-Za-z][A-Za-z0-9]{1,9}" maxlength="10" placeholder="PLAT"/><small class="muted">De 2 a 10 letras ou números. Usada nos códigos das tarefas.</small></label></div>
+					<label>Descrição<textarea name="description" rows="3" maxlength="20000" placeholder="O que você está criando?"></textarea></label>
+					<div><button class="button primary">Criar projeto</button></div>
 				</form>
 			</section>
 		}
@@ -50,16 +50,16 @@ templ Projects(base layouts.Data) {
 
 templ Project(data ProjectData) {
 	@layouts.Shell(data.Base, data.Project.Name) {
-		<div class="page-heading"><div><p class="eyebrow">{ data.Project.Key }</p><h1>{ data.Project.Name }</h1></div><a class="button primary" href={ templ.SafeURL("/projects/" + data.Project.Key + "/issues/new") }>+ New issue</a></div>
+		<div class="page-heading"><div><p class="eyebrow">{ data.Project.Key }</p><h1>{ data.Project.Name }</h1></div><a class="button primary" href={ templ.SafeURL("/projects/" + data.Project.Key + "/issues/new") }>+ Nova tarefa</a></div>
 		@components.ProjectTabs(data.Project.Key, data.Tab)
 		switch data.Tab {
 			case "issues":
 				@IssueList(data)
 			case "board":
 				@SprintToolbar(data)
-				<p class="muted tiny">Drag cards between columns. Open any issue to change status with keyboard controls. Up to 500 recently updated issues.</p>
+				<p class="muted tiny">Arraste cartões entre colunas. Abra uma tarefa para alterar o status pelo teclado. São exibidas até 500 tarefas atualizadas recentemente.</p>
 				<div class="board">
-					for _, status := range issue.Statuses[:5] {
+					for _, status := range boardStatuses(data) {
 						<section class="board-column" data-status={ status }>
 							<h2><span class={ "status-dot dot-" + status }></span>{ components.Name(status) } <small class="column-count">{ fmt.Sprint(boardCount(data,status)) }</small></h2>
 							<div class="board-cards">
@@ -84,23 +84,23 @@ templ Project(data ProjectData) {
 				<div class="dashboard-grid">
 					<section class="panel">
 						<div class="panel-heading">
-							<h2>About this project</h2>
+							<h2>Sobre este projeto</h2>
 							@components.Badge(data.Project.Status)
 						</div>
 						<div class="markdown">
 							@format.Markdown(data.Project.Description)
 						</div>
-						<div class="panel-heading"><h3>Project members</h3></div>
+						<div class="panel-heading"><h3>Membros do projeto</h3></div>
 						<div class="member-list">
 							for _, member := range data.Members {
 								<span class="member-chip"><span class="avatar small">{ layouts.Initial(member.Name) }</span>{ member.Name }</span>
 							}
 						</div>
 						if len(data.Members)==0 {
-							<p class="muted">No members added yet.</p>
+							<p class="muted">Nenhum membro adicionado ainda.</p>
 						}
 					</section>
-					<section class="panel"><div class="panel-heading"><h2>Keep work moving</h2></div><div class="quick-links"><a href={ templ.SafeURL("/projects/" + data.Project.Key + "/issues") }>Review issues <span>↗</span></a><a href={ templ.SafeURL("/projects/" + data.Project.Key + "/board") }>Open board <span>↗</span></a><a href={ templ.SafeURL("/projects/" + data.Project.Key + "/releases") }>Plan a release <span>↗</span></a><a href={ templ.SafeURL("/projects/" + data.Project.Key + "/time") }>Check time reports <span>↗</span></a></div></section>
+					<section class="panel"><div class="panel-heading"><h2>Mantenha o trabalho em andamento</h2></div><div class="quick-links"><a href={ templ.SafeURL("/projects/" + data.Project.Key + "/issues") }>Revisar tarefas <span>↗</span></a><a href={ templ.SafeURL("/projects/" + data.Project.Key + "/board") }>Abrir quadro <span>↗</span></a><a href={ templ.SafeURL("/projects/" + data.Project.Key + "/releases") }>Planejar uma versão <span>↗</span></a><a href={ templ.SafeURL("/projects/" + data.Project.Key + "/time") }>Ver relatórios de tempo <span>↗</span></a></div></section>
 				</div>
 				@IssueList(data)
 		}
@@ -117,32 +117,39 @@ func boardCount(data ProjectData, status string) int {
 	return n
 }
 
+func boardStatuses(data ProjectData) []string {
+	if data.SprintID > 0 && data.SprintStarted {
+		return issue.Statuses[1:5]
+	}
+	return issue.Statuses[:5]
+}
+
 templ IssueList(data ProjectData) {
 	<section class="panel list-panel">
 		<div class="panel-heading">
-			<h2>Issues</h2>
+			<h2>Tarefas</h2>
 			<form method="get" class="inline-form" action={ "/projects/" + data.Project.Key + "/issues" }>
 				<label class="sr-only" for="filter-status">Status</label>
 				<select id="filter-status" name="status">
-					<option value="">All statuses</option>
+					<option value="">Todos os status</option>
 					for _, status := range issue.Statuses {
 						<option selected?={ data.Status==status } value={ status }>{ components.Name(status) }</option>
 					}
-				</select><label class="sr-only" for="filter-type">Type</label>
+				</select><label class="sr-only" for="filter-type">Tipo</label>
 				<select id="filter-type" name="type">
-					<option value="">All types</option>
+					<option value="">Todos os tipos</option>
 					for _, kind := range issue.Types {
 						<option selected?={ data.Type==kind } value={ kind }>{ components.Name(kind) }</option>
 					}
-				</select><button class="button small-button">Filter</button>
+				</select><button class="button small-button">Filtrar</button>
 			</form>
 		</div>
 		if len(data.Issues)==0 {
-			@components.Empty("No issues here", "Create an issue or adjust your filters.")
+			@components.Empty("Nenhuma tarefa aqui", "Crie uma tarefa ou ajuste os filtros.")
 		} else {
 			<div class="table-scroll">
 				<table class="issue-table">
-					<thead><tr><th>Issue</th><th>Title</th><th>Status</th><th>Priority</th><th>Assignee</th></tr></thead>
+					<thead><tr><th>Tarefa</th><th>Título</th><th>Status</th><th>Prioridade</th><th>Responsável</th></tr></thead>
 					<tbody>
 						for _, item := range data.Issues {
 							<tr>
@@ -163,7 +170,7 @@ templ IssueList(data ProjectData) {
 									@components.Priority(item.Priority)
 								</td>
 								<td>
-									{ components.Text(item.AssigneeName,"Unassigned") }
+									{ components.Text(item.AssigneeName,"Não atribuída") }
 								</td>
 							</tr>
 						}
@@ -172,13 +179,13 @@ templ IssueList(data ProjectData) {
 			</div>
 		}
 		<div class="pagination">
-			<span class="muted tiny">Page { fmt.Sprint(max(data.Page,1)) } · 50 issues per page</span>
+			<span class="muted tiny">Página { fmt.Sprint(max(data.Page,1)) } · 50 tarefas por página</span>
 			<div>
 				if data.Page>1 {
-					<a class="button small-button" href={ templ.SafeURL(issuePageURL(data, data.Page-1)) }>Previous</a>
+					<a class="button small-button" href={ templ.SafeURL(issuePageURL(data, data.Page-1)) }>Anterior</a>
 				}
 				if data.HasNext {
-					<a class="button small-button" href={ templ.SafeURL(issuePageURL(data, data.Page+1)) }>Next</a>
+					<a class="button small-button" href={ templ.SafeURL(issuePageURL(data, data.Page+1)) }>Próxima</a>
 				}
 			</div>
 		</div>
@@ -202,48 +209,48 @@ templ ReleaseList(data ProjectData) {
 				<div class="card-bottom">
 					<span class="muted">
 						{ components.Date(item.TargetDate) }
-					</span><span>{ format.Duration(item.SpentSeconds) } tracked</span>
+					</span><span>{ format.Duration(item.SpentSeconds) } registrados</span>
 				</div>
 			</a>
 		}
 	</div>
 	if len(data.Releases)==0 {
-		@components.Empty("Ship with a little more clarity", "Group your issues into a release and track the finish line.")
+		@components.Empty("Publique com mais clareza", "Agrupe tarefas em uma versão e acompanhe a entrega.")
 	}
 	<details class="panel form-panel">
-		<summary>Create a release</summary>
+		<summary>Criar uma versão</summary>
 		<form method="post" action={ "/projects/" + data.Project.Key + "/releases" } class="stack">
 			@components.CSRF(data.Base.CSRF)
 			<div class="form-grid">
-				<label>Version<input name="version" required maxlength="80" placeholder="v1.0.0"/></label><label>Name<input name="name" maxlength="120" placeholder="A meaningful milestone"/></label><label>Target date<input type="date" name="target_date"/></label>
+				<label>Versão<input name="version" required maxlength="80" placeholder="v1.0.0"/></label><label>Nome<input name="name" maxlength="120" placeholder="Um marco importante"/></label><label>Data prevista<input type="date" name="target_date"/></label>
 				<label>
 					Status 
 					@components.Select("status", "planning", release.Statuses)
 				</label>
-			</div><label>Description<textarea name="description" maxlength="20000" rows="3"></textarea></label>
-			<div><button class="button primary">Create release</button></div>
+			</div><label>Descrição<textarea name="description" maxlength="20000" rows="3"></textarea></label>
+			<div><button class="button primary">Criar versão</button></div>
 		</form>
 	</details>
 }
 
 templ ProjectSettings(data ProjectData) {
 	if data.Base.User.Role!="admin" {
-		@components.Empty("Admin settings", "Ask a workspace admin to change project settings.")
+		@components.Empty("Configurações administrativas", "Peça a um administrador para alterar as configurações do projeto.")
 	} else {
 		<section class="panel form-panel">
-			<div class="panel-heading"><h2>Project details</h2><span class="mono muted">{ data.Project.Key }</span></div>
+			<div class="panel-heading"><h2>Detalhes do projeto</h2><span class="mono muted">{ data.Project.Key }</span></div>
 			<form method="post" action={ "/projects/" + data.Project.Key + "/settings" } class="stack">
 				@components.CSRF(data.Base.CSRF)
-				<label>Name<input name="name" value={ data.Project.Name } required maxlength="120"/></label><label>Description<textarea name="description" maxlength="20000" rows="3">{ data.Project.Description }</textarea></label>
+				<label>Nome<input name="name" value={ data.Project.Name } required maxlength="120"/></label><label>Descrição<textarea name="description" maxlength="20000" rows="3">{ data.Project.Description }</textarea></label>
 				<label>
 					Status 
 					@components.Select("status", data.Project.Status, []string{"active", "archived"})
 				</label>
-				<div><button class="button primary">Save project</button></div>
+				<div><button class="button primary">Salvar projeto</button></div>
 			</form>
 		</section>
 		<section class="panel form-panel">
-			<div class="panel-heading"><h2>Project members</h2></div>
+			<div class="panel-heading"><h2>Membros do projeto</h2></div>
 			for _, member := range data.Members {
 				<div class="settings-row">
 					<span>{ member.Name } <small class="muted">{ member.Email }</small></span>
@@ -253,31 +260,31 @@ templ ProjectSettings(data ProjectData) {
 							name="user_id"
 							type="hidden"
 							value={ fmt.Sprint(member.ID) }
-						/><input name="remove" type="hidden" value="true"/><button class="button small-button">Remove</button>
+						/><input name="remove" type="hidden" value="true"/><button class="button small-button">Remover</button>
 					</form>
 				</div>
 			}
 			<form method="post" action={ "/projects/" + data.Project.Key + "/members" } class="inline-form">
 				@components.CSRF(data.Base.CSRF)
 				<label>
-					Add member
+					Adicionar membro
 					<select name="user_id">
 						for _, user := range data.Users {
 							<option value={ fmt.Sprint(user.ID) }>{ user.Name }</option>
 						}
 					</select>
-				</label><button class="button">Add member</button>
+				</label><button class="button">Adicionar membro</button>
 			</form>
-			<p class="muted tiny">Membership helps organize your team. All workspace members can see and work on every project.</p>
+			<p class="muted tiny">A associação ajuda a organizar a equipe. Todos no espaço de trabalho podem ver e editar todos os projetos.</p>
 		</section>
 		<section class="panel form-panel">
 			<div class="panel-heading">
 				<h2>GitHub</h2>
 				<span class={ templ.KV("connected", data.Repository.ID != 0) }>
 					if data.Repository.ID!=0 {
-						Connected 
+						Conectado
 					} else {
-						Not connected 
+						Não conectado
 					}
 				</span>
 			</div>
@@ -285,17 +292,17 @@ templ ProjectSettings(data ProjectData) {
 				<p class="mono">{ data.Repository.FullName }</p>
 			}
 			if !data.GitHubEnabled {
-				<p class="muted">GitHub is optional. Your installation admin can configure a GitHub App to link development and publish releases.</p>
+				<p class="muted">O GitHub é opcional. O administrador pode configurar um GitHub App para vincular o desenvolvimento e publicar versões.</p>
 			} else {
 				if data.GitHubSlug!="" {
-					<p><a class="button" href={ templ.SafeURL("https://github.com/apps/" + data.GitHubSlug + "/installations/new") } target="_blank" rel="noopener noreferrer">Install GitHub App ↗</a></p>
+					<p><a class="button" href={ templ.SafeURL("https://github.com/apps/" + data.GitHubSlug + "/installations/new") } target="_blank" rel="noopener noreferrer">Instalar GitHub App ↗</a></p>
 				}
 				<form method="post" action={ "/projects/" + data.Project.Key + "/github" } class="stack">
 					@components.CSRF(data.Base.CSRF)
-					<label>Installation ID<input name="installation_id" type="number" min="1" required placeholder="From your GitHub installation URL"/></label><label>Repository<input name="repository" required placeholder="owner/repository" maxlength="200"/></label>
-					<div><button class="button primary">Connect repository</button></div>
+					<label>ID da instalação<input name="installation_id" type="number" min="1" required placeholder="Obtido na URL de instalação do GitHub"/></label><label>Repositório<input name="repository" required placeholder="owner/repository" maxlength="200"/></label>
+					<div><button class="button primary">Conectar repositório</button></div>
 				</form>
-				<p class="muted tiny">The App must have access to this repository. Repository access is verified before connecting.</p>
+				<p class="muted tiny">O aplicativo precisa ter acesso ao repositório. O acesso é verificado antes da conexão.</p>
 			}
 		</section>
 	}

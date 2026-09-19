@@ -18,7 +18,7 @@ import (
 )
 
 func Name(value string) string {
-	names := map[string]string{"in_progress": "In Progress", "todo": "Todo", "backlog": "Backlog", "done": "Done", "review": "Review", "canceled": "Canceled", "bug": "Bug", "feature": "Feature", "improvement": "Improvement", "task": "Task", "low": "Low", "medium": "Medium", "high": "High", "urgent": "Urgent", "planning": "Planning", "active": "Active", "released": "Released", "archived": "Archived"}
+	names := map[string]string{"in_progress": "Em andamento", "todo": "A fazer", "backlog": "Pendente", "done": "Concluída", "review": "Em revisão", "canceled": "Cancelada", "bug": "Erro", "feature": "Funcionalidade", "improvement": "Melhoria", "task": "Tarefa", "low": "Baixa", "medium": "Média", "high": "Alta", "urgent": "Urgente", "planning": "Planejamento", "active": "Ativo", "released": "Publicado", "archived": "Arquivado", "status": "Status", "type": "Tipo", "priority": "Prioridade"}
 	if name, ok := names[value]; ok {
 		return name
 	}
@@ -32,9 +32,9 @@ func DateInput(value pgtype.Date) string {
 }
 func Date(value pgtype.Date) string {
 	if !value.Valid {
-		return "No date"
+		return "Sem data"
 	}
-	return value.Time.Format("Jan 2, 2006")
+	return format.Date(value.Time)
 }
 func ID(value pgtype.Int8) string {
 	if !value.Valid {
@@ -219,9 +219,9 @@ func Priority(value string) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(Name(value) + " priority")
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs("Prioridade " + Name(value))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/components.templ`, Line: 77, Col: 79}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/components.templ`, Line: 77, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -234,7 +234,7 @@ func Priority(value string) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(Name(value))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/components.templ`, Line: 77, Col: 95}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/components.templ`, Line: 77, Col: 97}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -485,9 +485,9 @@ func Progress(done, total int64) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var24 string
-		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d of %d complete", done, total))
+		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d de %d concluídas", done, total))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/components.templ`, Line: 97, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/components.templ`, Line: 97, Col: 83}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 		if templ_7745c5c3_Err != nil {
@@ -500,7 +500,7 @@ func Progress(done, total int64) templ.Component {
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(Percent(done, total)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/components.templ`, Line: 97, Col: 130}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/components.templ`, Line: 97, Col: 133}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
@@ -532,7 +532,7 @@ func Progress(done, total int64) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "\" aria-label=\"Release progress\"></progress>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "\" aria-label=\"Progresso da versão\"></progress>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -574,12 +574,12 @@ func Bars(title string, rows []database.ReportGroupsRow) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</h3><span class=\"muted tiny\">Tracked time</span></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</h3><span class=\"muted tiny\">Tempo registrado</span></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if len(rows) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<p class=\"muted chart-empty\">No time tracked yet.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<p class=\"muted chart-empty\">Nenhum tempo registrado ainda.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -684,13 +684,13 @@ func ProjectTabs(key, active string) templ.Component {
 			templ_7745c5c3_Var35 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "<nav class=\"tabs\" aria-label=\"Project views\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "<nav class=\"tabs\" aria-label=\"Seções do projeto\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		for _, tab := range []struct {
 			slug, title string
-		}{{"", "Overview"}, {"issues", "Issues"}, {"board", "Board"}, {"calendar", "Calendar"}, {"releases", "Releases"}, {"time", "Time"}, {"settings", "Settings"}} {
+		}{{"", "Visão geral"}, {"issues", "Tarefas"}, {"board", "Quadro"}, {"calendar", "Calendário"}, {"releases", "Versões"}, {"time", "Tempo"}, {"settings", "Configurações"}} {
 			var templ_7745c5c3_Var36 = []any{templ.KV("active", active == tab.slug)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var36...)
 			if templ_7745c5c3_Err != nil {
@@ -898,9 +898,9 @@ func IssueCard(item database.ListBoardIssuesRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var48 string
-		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(Text(item.AssigneeName, "Unassigned"))
+		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(Text(item.AssigneeName, "Não atribuída"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/components.templ`, Line: 143, Col: 76}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/components.templ`, Line: 143, Col: 81}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 		if templ_7745c5c3_Err != nil {
@@ -924,9 +924,9 @@ func IssueCard(item database.ListBoardIssuesRow) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var50 string
-		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(FirstName(Text(item.AssigneeName, "Unassigned")))
+		templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(FirstName(Text(item.AssigneeName, "Não atribuída")))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/components.templ`, Line: 145, Col: 81}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/components/components.templ`, Line: 145, Col: 86}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 		if templ_7745c5c3_Err != nil {
@@ -950,7 +950,7 @@ func initial(value string) string {
 func FirstName(value string) string {
 	parts := strings.Fields(value)
 	if len(parts) == 0 {
-		return "Unassigned"
+		return "Não atribuída"
 	}
 	return parts[0]
 }

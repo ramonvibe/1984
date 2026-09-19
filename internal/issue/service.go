@@ -22,9 +22,9 @@ type Service struct { Pool *pgxpool.Pool; Queries *database.Queries }
 func Reference(key string,number int32) string { return fmt.Sprintf("%s-%d",key,number) }
 func ParseReference(value string) (string,int32,error) {
  parts:=strings.Split(strings.ToUpper(strings.TrimSpace(value)),"-")
- if len(parts)!=2 { return "",0,errors.New("invalid issue reference") }
+ if len(parts)!=2 { return "",0,errors.New("código de tarefa inválido") }
  key,err:=validate.ProjectKey(parts[0]); if err!=nil { return "",0,err }
- number,err:=strconv.ParseInt(parts[1],10,32); if err!=nil || number<1 { return "",0,errors.New("invalid issue number") }
+ number,err:=strconv.ParseInt(parts[1],10,32); if err!=nil || number<1 { return "",0,errors.New("número de tarefa inválido") }
  return key,int32(number),nil
 }
 func Date(value string) (pgtype.Date,error) {
@@ -37,7 +37,7 @@ func optionalID(value string) (pgtype.Int8,error) {
 func apply(current database.Issue,form url.Values) (database.Issue,error) {
  var err error
  if form.Has("title") { current.Title,err=validate.Required("title",form.Get("title"),240); if err!=nil { return current,err } }
- if form.Has("description") { current.Description=form.Get("description"); if len(current.Description)>50000 { return current,errors.New("description is too long") } }
+ if form.Has("description") { current.Description=form.Get("description"); if len(current.Description)>50000 { return current,errors.New("a descrição é muito longa") } }
  for _,field:=range []struct{name string; target *string; values []string}{{"type",&current.Type,Types},{"status",&current.Status,Statuses},{"priority",&current.Priority,Priorities}} {
   if form.Has(field.name) { *field.target,err=validate.OneOf(field.name,form.Get(field.name),field.values...); if err!=nil { return current,err } }
  }
@@ -45,28 +45,28 @@ func apply(current database.Issue,form url.Values) (database.Issue,error) {
  if form.Has("release_id") { current.ReleaseID,err=optionalID(form.Get("release_id")); if err!=nil { return current,err } }
  if form.Has("estimated_minutes") {
   value:=form.Get("estimated_minutes"); if value=="" { value="0" }
-  minutes,err:=strconv.ParseInt(value,10,32); if err!=nil || minutes<0 || minutes>525600 { return current,errors.New("estimate must be between 0 and 525600 minutes") }; current.EstimatedMinutes=int32(minutes)
+  minutes,err:=strconv.ParseInt(value,10,32); if err!=nil || minutes<0 || minutes>525600 { return current,errors.New("a estimativa deve estar entre 0 e 525600 minutos") }; current.EstimatedMinutes=int32(minutes)
  }
  if form.Has("start_date") { current.StartDate,err=Date(form.Get("start_date")); if err!=nil { return current,err } }
  if form.Has("due_date") { current.DueDate,err=Date(form.Get("due_date")); if err!=nil { return current,err } }
- if current.StartDate.Valid && current.DueDate.Valid && current.DueDate.Time.Before(current.StartDate.Time) { return current,errors.New("due date must not be before start date") }
- if current.Title=="" { return current,errors.New("title is required") }
+ if current.StartDate.Valid && current.DueDate.Valid && current.DueDate.Time.Before(current.StartDate.Time) { return current,errors.New("a data limite não pode ser anterior à data inicial") }
+ if current.Title=="" { return current,errors.New("o título é obrigatório") }
  return current,nil
 }
 func relationships(ctx context.Context,q *database.Queries,user auth.User,current database.Issue,form url.Values) error {
  if current.AssigneeID.Valid {
-  if _,err:=q.GetWorkspaceUser(ctx,database.GetWorkspaceUserParams{ID:current.AssigneeID.Int64,WorkspaceID:user.WorkspaceID}); err!=nil { return errors.New("assignee must belong to this workspace") }
+  if _,err:=q.GetWorkspaceUser(ctx,database.GetWorkspaceUserParams{ID:current.AssigneeID.Int64,WorkspaceID:user.WorkspaceID}); err!=nil { return errors.New("a pessoa responsável deve pertencer a este espaço de trabalho") }
  }
  if current.ReleaseID.Valid {
   release,err:=q.GetRelease(ctx,database.GetReleaseParams{ID:current.ReleaseID.Int64,WorkspaceID:user.WorkspaceID})
-  if err!=nil || release.ProjectID!=current.ProjectID { return errors.New("release must belong to this project") }
+  if err!=nil || release.ProjectID!=current.ProjectID { return errors.New("a versão deve pertencer a este projeto") }
  }
  if form.Has("labels_present") {
-  if len(form["label_id"])>20 { return errors.New("choose at most 20 labels") }
+  if len(form["label_id"])>20 { return errors.New("escolha no máximo 20 etiquetas") }
   if err:=q.SetIssueLabels(ctx,current.ID); err!=nil { return err }
   for _,value:=range form["label_id"] {
-   id,err:=optionalID(value); if err!=nil || !id.Valid { return errors.New("invalid label") }
-   if _,err=q.GetWorkspaceLabel(ctx,database.GetWorkspaceLabelParams{ID:id.Int64,WorkspaceID:user.WorkspaceID}); err!=nil { return errors.New("label must belong to this workspace") }
+   id,err:=optionalID(value); if err!=nil || !id.Valid { return errors.New("etiqueta inválida") }
+   if _,err=q.GetWorkspaceLabel(ctx,database.GetWorkspaceLabelParams{ID:id.Int64,WorkspaceID:user.WorkspaceID}); err!=nil { return errors.New("a etiqueta deve pertencer a este espaço de trabalho") }
    if err=q.AddIssueLabel(ctx,database.AddIssueLabelParams{IssueID:current.ID,LabelID:id.Int64}); err!=nil { return err }
   }
  }
@@ -75,7 +75,7 @@ func relationships(ctx context.Context,q *database.Queries,user auth.User,curren
 func (s Service) Create(ctx context.Context,user auth.User,projectID int64,form url.Values) (database.Issue,error) {
  current,err:=apply(database.Issue{ProjectID:projectID,ReporterID:user.ID,Status:"backlog",Type:"task",Priority:"medium"},form); if err!=nil { return current,err }
  err=database.Transaction(ctx,s.Pool,func(q *database.Queries) error {
-  project,err:=q.GetProject(ctx,database.GetProjectParams{ID:projectID,WorkspaceID:user.WorkspaceID}); if err!=nil { return err }; if project.Status=="archived" { return errors.New("project is archived") }
+  project,err:=q.GetProject(ctx,database.GetProjectParams{ID:projectID,WorkspaceID:user.WorkspaceID}); if err!=nil { return err }; if project.Status=="archived" { return errors.New("o projeto está arquivado") }
   number,err:=q.ReserveIssueNumber(ctx,projectID); if err!=nil { return err }
   current,err=q.CreateIssue(ctx,database.CreateIssueParams{ProjectID:projectID,Number:number,Title:current.Title,Description:current.Description,Type:current.Type,Status:current.Status,Priority:current.Priority,AssigneeID:current.AssigneeID,ReporterID:user.ID,EstimatedMinutes:current.EstimatedMinutes,StartDate:current.StartDate,DueDate:current.DueDate,ReleaseID:current.ReleaseID}); if err!=nil { return err }
   if err=relationships(ctx,q,user,current,form); err!=nil { return err }

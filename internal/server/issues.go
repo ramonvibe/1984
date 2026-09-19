@@ -62,8 +62,8 @@ func (a *App) updateIssue(w http.ResponseWriter,r *http.Request) error {
 }
 func (a *App) moveIssue(w http.ResponseWriter,r *http.Request) error {
  item,err:=a.findIssue(r); if err!=nil { return err }
- for key:=range r.PostForm { if key!="status" && key!="csrf" { return errors.New("only status can be changed by this action") } }
- if r.PostForm.Get("status")=="" { return errors.New("status is required") }
+ for key:=range r.PostForm { if key!="status" && key!="csrf" { return errors.New("apenas o status pode ser alterado por esta ação") } }
+ if r.PostForm.Get("status")=="" { return errors.New("o status é obrigatório") }
  if err=a.Issues.Update(r.Context(),User(r),item.ID,r.PostForm); err!=nil { return err }
  w.WriteHeader(204); return nil
 }
@@ -76,8 +76,8 @@ func (a *App) trackTime(w http.ResponseWriter,r *http.Request) error {
  item,err:=a.findIssue(r); if err!=nil { return err }
  var minutes int64; var started time.Time
  if r.FormValue("action")=="manual" {
-  minutes,err=strconv.ParseInt(r.FormValue("minutes"),10,64); if err!=nil { return errors.New("enter a valid number of minutes") }
-  started,err=time.Parse("2006-01-02",r.FormValue("date")); if err!=nil { return errors.New("enter a valid date") }
+  minutes,err=strconv.ParseInt(r.FormValue("minutes"),10,64); if err!=nil { return errors.New("digite uma quantidade válida de minutos") }
+  started,err=time.Parse("2006-01-02",r.FormValue("date")); if err!=nil { return errors.New("digite uma data válida") }
  }
  if err=a.Time.Track(r.Context(),User(r),item.ID,r.FormValue("action"),r.FormValue("description"),minutes,started); err!=nil { return err }
  redirect(w,r,issueURL(item.ProjectKey,item.Number)); return nil

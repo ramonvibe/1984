@@ -39,7 +39,7 @@ func run() error {
  app,err:=server.New(pool,configuration); if err!=nil { return err }
  httpServer:=&http.Server{Addr:configuration.Address,Handler:app.Handler(),ReadHeaderTimeout:5*time.Second,ReadTimeout:15*time.Second,WriteTimeout:75*time.Second,IdleTimeout:60*time.Second,MaxHeaderBytes:16<<10}
  failed:=make(chan error,1)
- go func(){ slog.Info("Trackline is ready","address",configuration.Address); failed<-httpServer.ListenAndServe() }()
+  go func(){ slog.Info("1984 is ready","address",configuration.Address); failed<-httpServer.ListenAndServe() }()
  ticker:=time.NewTicker(time.Hour); defer ticker.Stop()
  for {
   select {

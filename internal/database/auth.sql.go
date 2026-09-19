@@ -122,7 +122,7 @@ func (q *Queries) DeleteSession(ctx context.Context, tokenHash []byte) error {
 
 const getSessionUser = `-- name: GetSessionUser :one
 SELECT u.id, u.workspace_id, u.name, u.email, u.role, u.active, u.created_at, u.updated_at,
-       w.name AS workspace_name
+       w.name AS workspace_name, w.app_name, w.logo IS NOT NULL AS has_logo
 FROM sessions s
 JOIN users u ON u.id = s.user_id
 JOIN workspaces w ON w.id = u.workspace_id
@@ -139,6 +139,8 @@ type GetSessionUserRow struct {
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
 	WorkspaceName string             `json:"workspace_name"`
+	AppName       string             `json:"app_name"`
+	HasLogo       bool               `json:"has_logo"`
 }
 
 func (q *Queries) GetSessionUser(ctx context.Context, tokenHash []byte) (GetSessionUserRow, error) {
@@ -154,6 +156,8 @@ func (q *Queries) GetSessionUser(ctx context.Context, tokenHash []byte) (GetSess
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.WorkspaceName,
+		&i.AppName,
+		&i.HasLogo,
 	)
 	return i, err
 }

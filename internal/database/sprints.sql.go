@@ -11,9 +11,43 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const assignTodoToSprint = `-- name: AssignTodoToSprint :many
+UPDATE issues
+SET sprint_id = $1, updated_at = now()
+WHERE project_id = $2
+  AND sprint_id IS NULL
+  AND status = 'todo'
+RETURNING id
+`
+
+type AssignTodoToSprintParams struct {
+	SprintID  pgtype.Int8 `json:"sprint_id"`
+	ProjectID int64       `json:"project_id"`
+}
+
+func (q *Queries) AssignTodoToSprint(ctx context.Context, arg AssignTodoToSprintParams) ([]int64, error) {
+	rows, err := q.db.Query(ctx, assignTodoToSprint, arg.SprintID, arg.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const createSprint = `-- name: CreateSprint :one
 INSERT INTO sprints (project_id, name, start_date, end_date)
-VALUES ($1, $2, $3, $4) RETURNING id, project_id, name, start_date, end_date, created_at
+VALUES ($1, $2, $3, $4) RETURNING id, project_id, name, start_date, end_date, created_at, started_at
 `
 
 type CreateSprintParams struct {
@@ -38,12 +72,13 @@ func (q *Queries) CreateSprint(ctx context.Context, arg CreateSprintParams) (Spr
 		&i.StartDate,
 		&i.EndDate,
 		&i.CreatedAt,
+		&i.StartedAt,
 	)
 	return i, err
 }
 
 const getProjectSprint = `-- name: GetProjectSprint :one
-SELECT id, project_id, name, start_date, end_date, created_at FROM sprints WHERE id = $1 AND project_id = $2
+SELECT id, project_id, name, start_date, end_date, created_at, started_at FROM sprints WHERE id = $1 AND project_id = $2
 `
 
 type GetProjectSprintParams struct {
@@ -61,12 +96,13 @@ func (q *Queries) GetProjectSprint(ctx context.Context, arg GetProjectSprintPara
 		&i.StartDate,
 		&i.EndDate,
 		&i.CreatedAt,
+		&i.StartedAt,
 	)
 	return i, err
 }
 
 const listProjectSprints = `-- name: ListProjectSprints :many
-SELECT id, project_id, name, start_date, end_date, created_at FROM sprints WHERE project_id = $1 ORDER BY start_date DESC, id DESC
+SELECT id, project_id, name, start_date, end_date, created_at, started_at FROM sprints WHERE project_id = $1 ORDER BY start_date DESC, id DESC
 `
 
 func (q *Queries) ListProjectSprints(ctx context.Context, projectID int64) ([]Sprint, error) {
@@ -85,6 +121,7 @@ func (q *Queries) ListProjectSprints(ctx context.Context, projectID int64) ([]Sp
 			&i.StartDate,
 			&i.EndDate,
 			&i.CreatedAt,
+			&i.StartedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -94,6 +131,35 @@ func (q *Queries) ListProjectSprints(ctx context.Context, projectID int64) ([]Sp
 		return nil, err
 	}
 	return items, nil
+}
+
+const markSprintStarted = `-- name: MarkSprintStarted :exec
+UPDATE sprints
+SET started_at = now()
+WHERE id = $1 AND project_id = $2 AND started_at IS NULL
+`
+
+type MarkSprintStartedParams struct {
+	ID        int64 `json:"id"`
+	ProjectID int64 `json:"project_id"`
+}
+
+func (q *Queries) MarkSprintStarted(ctx context.Context, arg MarkSprintStartedParams) error {
+	_, err := q.db.Exec(ctx, markSprintStarted, arg.ID, arg.ProjectID)
+	return err
+}
+
+const prepareSprintIssues = `-- name: PrepareSprintIssues :exec
+UPDATE issues
+SET status = 'backlog', updated_at = now()
+WHERE project_id = $1
+  AND sprint_id IS NULL
+  AND status NOT IN ('done', 'canceled')
+`
+
+func (q *Queries) PrepareSprintIssues(ctx context.Context, projectID int64) error {
+	_, err := q.db.Exec(ctx, prepareSprintIssues, projectID)
+	return err
 }
 
 const setIssueSprint = `-- name: SetIssueSprint :exec

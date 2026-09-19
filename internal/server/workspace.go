@@ -2,14 +2,18 @@ package server
 
 import (
  "errors"
+ "fmt"
+ "io"
  "net/http"
  "strings"
  "time"
  "github.com/jackc/pgx/v5"
  "github.com/jackc/pgx/v5/pgtype"
+ "github.com/ramon/trackline/internal/auth"
  "github.com/ramon/trackline/internal/calendar"
  "github.com/ramon/trackline/internal/database"
  "github.com/ramon/trackline/internal/issue"
+ "github.com/ramon/trackline/internal/validate"
  "github.com/ramon/trackline/web/pages"
 )
 func (a *App) dashboard(w http.ResponseWriter,r *http.Request) error {
@@ -26,7 +30,7 @@ func (a *App) dashboard(w http.ResponseWriter,r *http.Request) error {
 func reportDates(r *http.Request) (pgtype.Date,pgtype.Date,error) {
  from,err:=issue.Date(r.URL.Query().Get("from")); if err!=nil { return from,pgtype.Date{},err }
  to,err:=issue.Date(r.URL.Query().Get("to")); if err!=nil { return from,to,err }
- if from.Valid && to.Valid && from.Time.After(to.Time) { return from,to,errors.New("end date must not precede start date") }
+ if from.Valid && to.Valid && from.Time.After(to.Time) { return from,to,errors.New("a data final não pode ser anterior à inicial") }
  return from,to,nil
 }
 func (a *App) reports(r *http.Request,projectID int64) (map[string][]database.ReportGroupsRow,error) {
@@ -45,7 +49,7 @@ func (a *App) timePage(w http.ResponseWriter,r *http.Request) error {
 }
 func (a *App) calendarPage(w http.ResponseWriter,r *http.Request) error {
  base,err:=a.base(r); if err!=nil { return err }
- month,err:=calendar.Parse(r.URL.Query().Get("month")); if err!=nil { return errors.New("invalid calendar month") }
+ month,err:=calendar.Parse(r.URL.Query().Get("month")); if err!=nil { return errors.New("mês de calendário inválido") }
  items,err:=a.calendarItems(r,month,""); if err!=nil { return err }
  return render(w,r,pages.Calendar(base,calendar.Build(month,items,"")))
 }
@@ -54,7 +58,7 @@ func (a *App) calendarItems(r *http.Request,month time.Time,key string) ([]datab
  return a.Queries.CalendarRange(r.Context(),database.CalendarRangeParams{WorkspaceID:User(r).WorkspaceID,ProjectKey:key,DateFrom:pgtype.Date{Time:start,Valid:true},DateTo:pgtype.Date{Time:start.AddDate(0,0,42),Valid:true}})
 }
 func (a *App) search(w http.ResponseWriter,r *http.Request) error {
- query:=strings.TrimSpace(r.URL.Query().Get("q")); if len(query)>100 { return errors.New("search must be at most 100 bytes") }
+ query:=strings.TrimSpace(r.URL.Query().Get("q")); if len(query)>100 { return errors.New("a busca deve ter no máximo 100 caracteres") }
  if key,number,err:=issue.ParseReference(query); err==nil {
   item,err:=a.Queries.GetIssueByKey(r.Context(),database.GetIssueByKeyParams{WorkspaceID:User(r).WorkspaceID,Key:key,Number:number})
   if err==nil { redirect(w,r,issueURL(item.ProjectKey,item.Number)); return nil }
@@ -83,4 +87,27 @@ func (a *App) addUser(w http.ResponseWriter,r *http.Request) error {
 func (a *App) addLabel(w http.ResponseWriter,r *http.Request) error {
  if err:=a.Projects.Label(r.Context(),User(r),r.FormValue("name"),r.FormValue("color")); err!=nil { return err }
  redirect(w,r,"/settings"); return nil
+}
+
+func (a *App) updateBranding(w http.ResponseWriter, r *http.Request) error {
+ if User(r).Role!="admin" { return fmt.Errorf("%w", auth.ErrForbidden) }
+ name,err:=validate.Required("nome do sistema",r.FormValue("app_name"),60); if err!=nil { return err }
+ if r.FormValue("remove_logo")=="1" {
+  _,err=a.Pool.Exec(r.Context(),"UPDATE workspaces SET app_name=$1, logo=NULL, logo_content_type=NULL, updated_at=now() WHERE id=$2",name,User(r).WorkspaceID)
+ } else if file,_,fileErr:=r.FormFile("logo"); fileErr==nil {
+  defer file.Close()
+  body,readErr:=io.ReadAll(io.LimitReader(file,1048577)); if readErr!=nil { return readErr }; if len(body)>1048576 { return errors.New("a logo deve ter no máximo 1 MB") }
+  contentType:=http.DetectContentType(body)
+  switch contentType { case "image/png","image/jpeg","image/webp","image/gif": default: return errors.New("envie uma logo PNG, JPEG, WebP ou GIF") }
+  _,err=a.Pool.Exec(r.Context(),"UPDATE workspaces SET app_name=$1, logo=$2, logo_content_type=$3, updated_at=now() WHERE id=$4",name,body,contentType,User(r).WorkspaceID)
+ } else if errors.Is(fileErr,http.ErrMissingFile) {
+  _,err=a.Pool.Exec(r.Context(),"UPDATE workspaces SET app_name=$1, updated_at=now() WHERE id=$2",name,User(r).WorkspaceID)
+ } else { return fileErr }
+ if err!=nil { return err }; redirect(w,r,"/settings"); return nil
+}
+
+func (a *App) brandLogo(w http.ResponseWriter, r *http.Request) error {
+ var contentType string; var body []byte
+ if err:=a.Pool.QueryRow(r.Context(),"SELECT logo_content_type, logo FROM workspaces WHERE logo IS NOT NULL ORDER BY id LIMIT 1").Scan(&contentType,&body); err!=nil { return err }
+ w.Header().Set("Content-Type",contentType); w.Header().Set("Content-Length",fmt.Sprint(len(body))); _,err:=w.Write(body); return err
 }

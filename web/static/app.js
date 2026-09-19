@@ -1,6 +1,13 @@
 (() => {
   "use strict";
+	document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
   const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content || "";
+	const themeToggle = document.querySelector(".theme-toggle");
+	themeToggle?.addEventListener("click", () => {
+		const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+		document.documentElement.dataset.theme = theme;
+		localStorage.setItem("theme", theme);
+	});
   let noticeTimeout;
   function notify(message) {
     const notice = document.getElementById("notice");
@@ -13,13 +20,22 @@
     event.detail.headers["X-CSRF-Token"] = csrf();
   });
   document.addEventListener("htmx:responseError", event => {
-    notify(event.detail.xhr.responseText.slice(0,300) || "Could not save. Try again.");
+		notify(event.detail.xhr.responseText.slice(0,300) || "Não foi possível salvar. Tente novamente.");
   });
-  document.addEventListener("htmx:sendError", () => notify("Connection lost. Your change was not saved."));
-  document.addEventListener("submit", event => {
+	document.addEventListener("htmx:sendError", () => notify("Conexão perdida. Sua alteração não foi salva."));
+	document.addEventListener("submit", event => {
     const message = event.target.dataset.confirm;
     if (message && !window.confirm(message)) event.preventDefault();
   });
+	const sprintFilter = document.querySelector(".sprint-filter-form select[name=sprint]");
+	const startSprintForm = document.querySelector(".start-sprint-form");
+	if (sprintFilter && startSprintForm) {
+		const updateStartSprint = () => {
+			startSprintForm.hidden = sprintFilter.value !== startSprintForm.dataset.sprintId;
+		};
+		sprintFilter.addEventListener("change", updateStartSprint);
+		updateStartSprint();
+	}
   document.addEventListener("keydown", event => {
     if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey ||
         /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) ||
@@ -64,13 +80,13 @@
         body: new URLSearchParams({ status: column.dataset.status }),
         redirect: "error"
       });
-      if (!response.ok) throw new Error((await response.text()).slice(0,300) || "Could not move this issue.");
+			if (!response.ok) throw new Error((await response.text()).slice(0,300) || "Não foi possível mover esta tarefa.");
       column.querySelector(".board-cards").prepend(card);
       [origin,column].forEach(item => {
         item.querySelector(".column-count").textContent = item.querySelectorAll(".issue-card").length;
       });
     } catch (error) {
-      notify(error.message || "Connection lost. The card has not moved.");
+			notify(error.message || "Conexão perdida. O cartão não foi movido.");
     } finally {
       card.removeAttribute("aria-busy");
       card.classList.remove("dragging");

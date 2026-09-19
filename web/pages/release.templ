@@ -11,57 +11,57 @@ import (
 
 templ Release(data ReleaseData) {
 	@layouts.Shell(data.Base, data.Item.Version) {
-		<div class="issue-breadcrumb"><a href={ templ.SafeURL("/projects/" + data.Item.ProjectKey + "/releases") }>{ data.Item.ProjectName }</a><span>/</span>Releases</div>
+		<div class="issue-breadcrumb"><a href={ templ.SafeURL("/projects/" + data.Item.ProjectKey + "/releases") }>{ data.Item.ProjectName }</a><span>/</span>Versões</div>
 		<div class="page-heading">
-			<div><p class="eyebrow">RELEASE</p><h1>{ data.Item.Version }</h1><p class="muted">{ data.Item.Name }</p></div>
+			<div><p class="eyebrow">VERSÃO</p><h1>{ data.Item.Version }</h1><p class="muted">{ data.Item.Name }</p></div>
 			@components.Badge(data.Item.Status)
 		</div>
 		<div class="stats-grid release-stats">
-			@components.Stat("Issues", fmt.Sprint(data.Item.IssueCount))
-			@components.Stat("Done", fmt.Sprint(data.Item.DoneCount))
-			@components.Stat("Open", fmt.Sprint(data.Item.OpenCount))
-			@components.Stat("Estimated", format.Duration(data.Item.EstimatedMinutes*60))
-			@components.Stat("Spent", format.Duration(data.Spent))
+			@components.Stat("Tarefas", fmt.Sprint(data.Item.IssueCount))
+			@components.Stat("Concluídas", fmt.Sprint(data.Item.DoneCount))
+			@components.Stat("Abertas", fmt.Sprint(data.Item.OpenCount))
+			@components.Stat("Estimado", format.Duration(data.Item.EstimatedMinutes*60))
+			@components.Stat("Registrado", format.Duration(data.Spent))
 		</div>
 		<div class="dashboard-grid">
 			<section class="panel">
-				<div class="panel-heading"><h2>Progress</h2><span class="muted">{ components.Date(data.Item.TargetDate) }</span></div>
+				<div class="panel-heading"><h2>Progresso</h2><span class="muted">{ components.Date(data.Item.TargetDate) }</span></div>
 				@components.Progress(data.Item.DoneCount, data.Item.IssueCount)
 				<div class="release-breakdown">
 					<span>
-						{ fmt.Sprint(data.Item.BugCount) } bugs
-					</span><span>{ fmt.Sprint(data.Item.FeatureCount) } features</span><span>{ fmt.Sprint(data.Item.TaskCount) } tasks</span><span>{ fmt.Sprint(data.Counts.PullRequests) } PRs</span><span>{ fmt.Sprint(data.Counts.Commits) } commits</span>
+						{ fmt.Sprint(data.Item.BugCount) } erros
+					</span><span>{ fmt.Sprint(data.Item.FeatureCount) } funcionalidades</span><span>{ fmt.Sprint(data.Item.TaskCount) } tarefas</span><span>{ fmt.Sprint(data.Counts.PullRequests) } PRs</span><span>{ fmt.Sprint(data.Counts.Commits) } commits</span>
 				</div>
 				<div class="markdown">
 					@format.Markdown(data.Item.Description)
 				</div>
 			</section>
 			<section class="panel">
-				<div class="panel-heading"><h2>GitHub Release</h2></div>
+				<div class="panel-heading"><h2>Versão no GitHub</h2></div>
 				if data.Item.GithubReleaseID.Valid {
-					<p class="connected">Published { format.Date(data.Item.PublishedAt.Time) }</p><a class="button" href={ data.Item.GithubUrl.String } target="_blank" rel="noopener noreferrer">View GitHub Release ↗</a>
+					<p class="connected">Publicado em { format.Date(data.Item.PublishedAt.Time) }</p><a class="button" href={ data.Item.GithubUrl.String } target="_blank" rel="noopener noreferrer">Ver versão no GitHub ↗</a>
 				} else if !data.GitHubEnabled {
-					<p class="muted">Configure a GitHub App and connect this project's repository to publish here. Drafts work without GitHub.</p>
+					<p class="muted">Configure um GitHub App e conecte o repositório deste projeto para publicar aqui. Rascunhos funcionam sem GitHub.</p>
 				} else {
-					<p class="muted">Publishing creates a public or private release in your connected repository, using <strong>{ data.Item.Version }</strong> as the tag.</p>
+					<p class="muted">A publicação cria uma versão pública ou privada no repositório conectado, usando <strong>{ data.Item.Version }</strong> como tag.</p>
 					if data.Base.User.Role=="admin" {
-						<form method="post" action={ releaseAction(data) + "/publish" } data-confirm="Publish the saved changelog to GitHub? This makes a release visible in the connected repository.">
+						<form method="post" action={ releaseAction(data) + "/publish" } data-confirm="Publicar o histórico salvo no GitHub? Isso tornará a versão visível no repositório conectado.">
 							@components.CSRF(data.Base.CSRF)
-							<button class="button primary" disabled?={ data.Item.Changelog=="" }>Publish to GitHub</button>
+							<button class="button primary" disabled?={ data.Item.Changelog=="" }>Publicar no GitHub</button>
 						</form>
 					} else {
-						<p class="muted">A workspace admin can publish this release.</p>
+						<p class="muted">Um administrador pode publicar esta versão.</p>
 					}
 				}
 			</section>
 		</div>
 		<section class="panel">
 			<div class="panel-heading">
-				<div><h2>Changelog</h2><p class="muted tiny">Generated from completed issues. Always yours to edit.</p></div>
+				<div><h2>Histórico de alterações</h2><p class="muted tiny">Gerado com tarefas concluídas e sempre editável.</p></div>
 				if !data.Item.GithubReleaseID.Valid {
-					<form method="post" action={ releaseAction(data) + "/generate" } data-confirm="Replace the saved draft with a freshly generated changelog?">
+					<form method="post" action={ releaseAction(data) + "/generate" } data-confirm="Substituir o rascunho por um histórico recém-gerado?">
 						@components.CSRF(data.Base.CSRF)
-						<button class="button">Generate changelog</button>
+						<button class="button">Gerar histórico</button>
 					</form>
 				}
 			</div>
@@ -70,15 +70,15 @@ templ Release(data ReleaseData) {
 			} else {
 				<form method="post" action={ releaseAction(data) + "/draft" } class="stack">
 					@components.CSRF(data.Base.CSRF)
-					<label class="sr-only" for="changelog">Release changelog</label><textarea id="changelog" name="changelog" class="changelog-editor" rows="14" maxlength="100000" placeholder="Generate a changelog, or write your own Markdown…">{ data.Item.Changelog }</textarea>
-					<div class="card-bottom"><small class="muted">Save before publishing. No AI required.</small><button class="button primary">Save draft</button></div>
+					<label class="sr-only" for="changelog">Histórico da versão</label><textarea id="changelog" name="changelog" class="changelog-editor" rows="14" maxlength="100000" placeholder="Gere um histórico ou escreva em Markdown…">{ data.Item.Changelog }</textarea>
+					<div class="card-bottom"><small class="muted">Salve antes de publicar. Nenhuma IA é usada.</small><button class="button primary">Salvar rascunho</button></div>
 				</form>
 			}
 		</section>
 		<section class="panel">
-			<div class="panel-heading"><h2>Release issues</h2><a class="subtle-link" href={ templ.SafeURL("/projects/" + data.Item.ProjectKey + "/issues") }>Manage issues ↗</a></div>
+			<div class="panel-heading"><h2>Tarefas da versão</h2><a class="subtle-link" href={ templ.SafeURL("/projects/" + data.Item.ProjectKey + "/issues") }>Gerenciar tarefas ↗</a></div>
 			if len(data.Issues)==0 {
-				@components.Empty("No issues assigned", "Open an issue and choose this release in its properties.")
+				@components.Empty("Nenhuma tarefa vinculada", "Abra uma tarefa e escolha esta versão nas propriedades.")
 			}
 			for _, item := range data.Issues {
 				<a class="issue-row" href={ templ.SafeURL("/issues/" + issue.Reference(item.ProjectKey, item.Number)) }>
@@ -90,24 +90,24 @@ templ Release(data ReleaseData) {
 		</section>
 		if !data.Item.GithubReleaseID.Valid {
 			<details class="panel form-panel">
-				<summary>Edit release details</summary>
+				<summary>Editar detalhes da versão</summary>
 				<form method="post" action={ releaseAction(data) } class="stack">
 					@components.CSRF(data.Base.CSRF)
 					<div class="form-grid">
-						<label>Version<input name="version" required maxlength="80" value={ data.Item.Version }/></label><label>Name<input name="name" maxlength="120" value={ data.Item.Name }/></label>
+						<label>Versão<input name="version" required maxlength="80" value={ data.Item.Version }/></label><label>Nome<input name="name" maxlength="120" value={ data.Item.Name }/></label>
 						<label>
 							Status 
 							@components.Select("status", data.Item.Status, release.Statuses)
 						</label>
 						<label>
-							Target date<input
+							Data prevista<input
 	type="date"
 	name="target_date"
 	value={ components.DateInput(data.Item.TargetDate) }
 />
 						</label>
-					</div><label>Description<textarea name="description" maxlength="20000" rows="3">{ data.Item.Description }</textarea></label>
-					<div><button class="button primary">Save details</button></div>
+					</div><label>Descrição<textarea name="description" maxlength="20000" rows="3">{ data.Item.Description }</textarea></label>
+					<div><button class="button primary">Salvar detalhes</button></div>
 				</form>
 			</details>
 		}

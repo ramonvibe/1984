@@ -37,21 +37,26 @@ func Date(value time.Time) string {
 	if value.IsZero() {
 		return "—"
 	}
-	return value.Format("Jan 2, 2006")
+	months := []string{"janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"}
+	return fmt.Sprintf("%d de %s de %d", value.Day(), months[value.Month()-1], value.Year())
+}
+
+func ShortDate(value time.Time) string {
+	return fmt.Sprintf("%02d/%02d", value.Day(), value.Month())
 }
 
 func Relative(value time.Time) string {
 	delta := time.Since(value)
 	if delta < time.Minute {
-		return "now"
+		return "agora"
 	}
 	if delta < time.Hour {
-		return fmt.Sprintf("%dm ago", int(delta.Minutes()))
+		return fmt.Sprintf("há %d min", int(delta.Minutes()))
 	}
 	if delta < 24*time.Hour {
-		return fmt.Sprintf("%dh ago", int(delta.Hours()))
+		return fmt.Sprintf("há %d h", int(delta.Hours()))
 	}
-	return value.Format("Jan 2")
+	return ShortDate(value)
 }
 
 // Markdown renders a deliberately small, escaped Markdown subset.
@@ -66,4 +71,3 @@ func Markdown(value string) templ.Component {
 	}
 	return templ.Raw(strings.Join(paragraphs, ""))
 }
-

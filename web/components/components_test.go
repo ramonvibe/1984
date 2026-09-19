@@ -10,7 +10,7 @@ import (
 
 func TestCardFirstName(t *testing.T) {
 	for _, tc := range []struct{ full, first string }{
-		{"Alice Smith", "Alice"}, {"  João  Silva ", "João"}, {"李 明", "李"}, {"Prince", "Prince"}, {" \t ", "Unassigned"},
+		{"Alice Smith", "Alice"}, {"  João  Silva ", "João"}, {"李 明", "李"}, {"Prince", "Prince"}, {" \t ", "Não atribuída"},
 	} {
 		if got := FirstName(tc.full); got != tc.first {
 			t.Errorf("FirstName(%q)=%q", tc.full, got)

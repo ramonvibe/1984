@@ -17,11 +17,11 @@ func Record(ctx context.Context,q *database.Queries,workspace,project,issue,acto
 func Human(kind string,data []byte) string {
  var fields map[string]string
  _=json.Unmarshal(data,&fields)
- names:=map[string]string{"issue.created":"created this issue","issue.updated":"updated this issue","issue.assigned":"changed assignee","issue.status_changed":"changed status","issue.priority_changed":"changed priority","comment.created":"added a comment","timer.started":"started a timer","timer.stopped":"stopped the timer","time.added":"logged time","github.commit_linked":"linked a commit","github.pr_linked":"linked a pull request","github.pr_merged":"merged a pull request","release.created":"created a release","release.published":"published a release","release.updated":"updated a release","release.changelog_saved":"saved the changelog"}
- names["sprint.created"]="created a sprint"
- names["issue.sprint_changed"]="changed sprint"
+ names:=map[string]string{"issue.created":"criou esta tarefa","issue.updated":"atualizou esta tarefa","issue.assigned":"alterou a pessoa responsável","issue.status_changed":"alterou o status","issue.priority_changed":"alterou a prioridade","comment.created":"adicionou um comentário","timer.started":"iniciou um cronômetro","timer.stopped":"parou o cronômetro","time.added":"registrou tempo","github.commit_linked":"vinculou um commit","github.pr_linked":"vinculou um pull request","github.pr_merged":"mesclou um pull request","release.created":"criou uma versão","release.published":"publicou uma versão","release.updated":"atualizou uma versão","release.changelog_saved":"salvou o histórico de alterações"}
+ names["sprint.created"]="criou uma sprint"
+ names["issue.sprint_changed"]="alterou a sprint"
  result:=names[kind]; if result=="" { result=strings.ReplaceAll(kind,"."," ") }
- if value:=fields["to"]; value!="" { result+=" to "+strings.ReplaceAll(value,"_"," ") }
+ if value:=fields["to"]; value!="" { result+=" para "+strings.ReplaceAll(value,"_"," ") }
  if value:=fields["title"]; value!="" { result+=" · "+value }
  return result
 }

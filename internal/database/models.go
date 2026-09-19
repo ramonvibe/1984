@@ -166,6 +166,7 @@ type Sprint struct {
 	StartDate pgtype.Date        `json:"start_date"`
 	EndDate   pgtype.Date        `json:"end_date"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	StartedAt pgtype.Timestamptz `json:"started_at"`
 }
 
 type TimeEntry struct {

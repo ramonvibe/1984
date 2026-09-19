@@ -138,7 +138,7 @@ func IssueDetail(data IssueData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</h1><details class=\"edit-title\"><summary class=\"subtle-link\">Edit title</summary><form method=\"post\" action=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</h1><details class=\"edit-title\"><summary class=\"subtle-link\">Editar título</summary><form method=\"post\" action=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -185,7 +185,7 @@ func IssueDetail(data IssueData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" aria-label=\"Issue title\"><button class=\"button small-button\">Save</button></form></details></div><div class=\"issue-badges\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" aria-label=\"Título da tarefa\"><button class=\"button small-button\">Salvar</button></form></details></div><div class=\"issue-badges\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -201,12 +201,12 @@ func IssueDetail(data IssueData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div><section class=\"issue-section\"><div class=\"section-heading\"><h2>Description</h2></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div><section class=\"issue-section\"><div class=\"section-heading\"><h2>Descrição</h2></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if data.Item.Description == "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<p class=\"muted\">Give this issue a little context.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<p class=\"muted\">Adicione um pouco de contexto à tarefa.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -224,7 +224,7 @@ func IssueDetail(data IssueData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<details><summary class=\"subtle-link\">Edit description</summary><form method=\"post\" action=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<details><summary class=\"subtle-link\">Editar descrição</summary><form method=\"post\" action=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -258,27 +258,27 @@ func IssueDetail(data IssueData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<textarea name=\"description\" maxlength=\"50000\" rows=\"8\" aria-label=\"Issue description\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<textarea name=\"description\" maxlength=\"50000\" rows=\"8\" aria-label=\"Descrição da tarefa\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(data.Item.Description)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 52, Col: 117}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 52, Col: 121}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</textarea><div><button class=\"button primary small-button\">Save description</button><small class=\"muted\">Simple Markdown supported</small></div></form></details></section><section class=\"issue-section\"><div class=\"section-heading\"><h2>Development</h2><span class=\"muted tiny\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</textarea><div><button class=\"button primary small-button\">Salvar descrição</button><small class=\"muted\">Markdown simples disponível</small></div></form></details></section><section class=\"issue-section\"><div class=\"section-heading\"><h2>Desenvolvimento</h2><span class=\"muted tiny\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d PRs · %d commits", len(data.PRs), len(data.Commits)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 58, Col: 148}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 58, Col: 152}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -289,20 +289,20 @@ func IssueDetail(data IssueData) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if len(data.PRs) == 0 && len(data.Commits) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div class=\"development-empty\"><span aria-hidden=\"true\">⑂</span><p>Connect your work.<small>Reference <code>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div class=\"development-empty\"><span aria-hidden=\"true\">⑂</span><p>Conecte seu trabalho.<small>Mencione <code>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(issue.Reference(data.Item.ProjectKey, data.Item.Number))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 60, Col: 172}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 60, Col: 174}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</code> in commits and pull requests.</small></p></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</code> em commits e pull requests.</small></p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -374,7 +374,7 @@ func IssueDetail(data IssueData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if pr.Merged {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "Merged ✓ ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "Mesclado ✓")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -439,20 +439,20 @@ func IssueDetail(data IssueData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</section><section class=\"issue-section\"><div class=\"section-heading\"><h2>Time tracking</h2><strong>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</section><section class=\"issue-section\"><div class=\"section-heading\"><h2>Registro de tempo</h2><strong>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var25 string
 		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(format.Duration(data.Spent))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 79, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 79, Col: 97}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, " spent</strong></div><div class=\"time-actions\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, " registradas</strong></div><div class=\"time-actions\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -478,19 +478,19 @@ func IssueDetail(data IssueData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<input type=\"hidden\" name=\"action\" value=\"stop\"><button class=\"button timer-stop\"><span class=\"live-dot\"></span>Stop timer</button></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<input type=\"hidden\" name=\"action\" value=\"stop\"><button class=\"button timer-stop\"><span class=\"live-dot\"></span>Parar cronômetro</button></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else if data.Base.Timer.ID != 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<p class=\"muted\">Timer running on <a href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<p class=\"muted\">Cronômetro ativo em <a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var27 templ.SafeURL
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL("/issues/" + issue.Reference(data.Base.Timer.ProjectKey, data.Base.Timer.IssueNumber)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 87, Col: 151}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 87, Col: 155}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -503,7 +503,7 @@ func IssueDetail(data IssueData) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(issue.Reference(data.Base.Timer.ProjectKey, data.Base.Timer.IssueNumber))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 87, Col: 227}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 87, Col: 231}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -535,25 +535,25 @@ func IssueDetail(data IssueData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<input type=\"hidden\" name=\"action\" value=\"start\"><button class=\"button\">▷ Start timer</button></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<input type=\"hidden\" name=\"action\" value=\"start\"><button class=\"button\">▷ Iniciar cronômetro</button></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<span class=\"muted tiny\">Estimated ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<span class=\"muted tiny\">Estimativa: ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var30 string
 		templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(format.Minutes(data.Item.EstimatedMinutes))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 94, Col: 85}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 94, Col: 87}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "</span></div><details class=\"manual-time\"><summary class=\"subtle-link\">+ Add time manually</summary><form method=\"post\" action=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "</span></div><details class=\"manual-time\"><summary class=\"subtle-link\">+ Adicionar tempo manualmente</summary><form method=\"post\" action=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -574,7 +574,7 @@ func IssueDetail(data IssueData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "<input type=\"hidden\" name=\"action\" value=\"manual\"><div class=\"form-grid\"><label>Minutes<input type=\"number\" name=\"minutes\" min=\"1\" max=\"1440\" required placeholder=\"60\"></label> <label>Date (UTC)<input type=\"date\" name=\"date\" required value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "<input type=\"hidden\" name=\"action\" value=\"manual\"><div class=\"form-grid\"><label>Minutos<input type=\"number\" name=\"minutes\" min=\"1\" max=\"1440\" required placeholder=\"60\"></label> <label>Data (UTC)<input type=\"date\" name=\"date\" required value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -600,7 +600,7 @@ func IssueDetail(data IssueData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "\"></label></div><label>What did you work on?<input name=\"description\" maxlength=\"2000\"></label><div><button class=\"button\">Add time</button></div></form></details><div class=\"time-summary\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "\"></label></div><label>Em que você trabalhou?<input name=\"description\" maxlength=\"2000\"></label><div><button class=\"button\">Adicionar tempo</button></div></form></details><div class=\"time-summary\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -654,7 +654,7 @@ func IssueDetail(data IssueData) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if len(data.Time) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<details><summary class=\"subtle-link\">Time entries</summary><div class=\"table-scroll\"><table><thead><tr><th>Member</th><th>Date</th><th>Duration</th><th>Description</th></tr></thead> <tbody>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<details><summary class=\"subtle-link\">Registros de tempo</summary><div class=\"table-scroll\"><table><thead><tr><th>Membro</th><th>Data</th><th>Duração</th><th>Descrição</th></tr></thead> <tbody>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -677,9 +677,9 @@ func IssueDetail(data IssueData) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var38 string
-				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(entry.StartedAt.Time.UTC().Format("Jan 2"))
+				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(format.ShortDate(entry.StartedAt.Time.UTC()))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 131, Col: 60}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 131, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 				if templ_7745c5c3_Err != nil {
@@ -700,7 +700,7 @@ func IssueDetail(data IssueData) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "Running ")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "Em andamento")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -728,14 +728,14 @@ func IssueDetail(data IssueData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "</section><section class=\"issue-section\"><div class=\"section-heading\"><h2>Comments</h2><span class=\"muted tiny\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "</section><section class=\"issue-section\"><div class=\"section-heading\"><h2>Comentários</h2><span class=\"muted tiny\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprint(len(data.Comments)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 149, Col: 108}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 149, Col: 112}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 		if templ_7745c5c3_Err != nil {
@@ -832,7 +832,7 @@ func IssueDetail(data IssueData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "<label class=\"sr-only\" for=\"comment-body\">Write a comment</label><textarea id=\"comment-body\" name=\"body\" required rows=\"3\" maxlength=\"10000\" placeholder=\"Leave a comment…\"></textarea><div class=\"card-bottom\"><small class=\"muted\">Simple Markdown supported</small><button class=\"button primary\">Comment</button></div></form></section><section class=\"issue-section\"><div class=\"section-heading\"><h2>Activity</h2></div><ol class=\"timeline\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "<label class=\"sr-only\" for=\"comment-body\">Escrever comentário</label><textarea id=\"comment-body\" name=\"body\" required rows=\"3\" maxlength=\"10000\" placeholder=\"Escreva um comentário…\"></textarea><div class=\"card-bottom\"><small class=\"muted\">Markdown simples disponível</small><button class=\"button primary\">Publicar comentário</button></div></form></section><section class=\"issue-section\"><div class=\"section-heading\"><h2>Atividade</h2></div><ol class=\"timeline\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -881,7 +881,7 @@ func IssueDetail(data IssueData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "</ol></section></article><aside class=\"issue-properties\" aria-label=\"Issue properties\"><form method=\"post\" action=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "</ol></section></article><aside class=\"issue-properties\" aria-label=\"Propriedades da tarefa\"><form method=\"post\" action=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -925,7 +925,7 @@ func IssueDetail(data IssueData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, ">No sprint</option> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, ">Sem sprint</option> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -971,14 +971,14 @@ func IssueDetail(data IssueData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "</select></label> <button class=\"button small\">Save</button></form><h2>Properties</h2>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "</select></label> <button class=\"button small\">Salvar</button></form><h2>Propriedades</h2>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		for _, field := range []struct {
 			name, label, value string
 			options            []string
-		}{{"status", "Status", data.Item.Status, issue.Statuses}, {"type", "Type", data.Item.Type, issue.Types}, {"priority", "Priority", data.Item.Priority, issue.Priorities}} {
+		}{{"status", "Status", data.Item.Status, issue.Statuses}, {"type", "Tipo", data.Item.Type, issue.Types}, {"priority", "Prioridade", data.Item.Priority, issue.Priorities}} {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, "<form method=\"post\" action=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1035,15 +1035,15 @@ func IssueDetail(data IssueData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var57 string
-			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs("Save " + field.label)
+			templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs("Salvar " + field.label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 197, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 197, Col: 80}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 96, "\">Save</button></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 96, "\">Salvar</button></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1082,7 +1082,7 @@ func IssueDetail(data IssueData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 100, "<label>Assignee <select name=\"assignee_id\"><option value=\"\">Unassigned</option> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 100, "<label>Assignee <select name=\"assignee_id\"><option value=\"\">Não atribuída</option> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1128,7 +1128,7 @@ func IssueDetail(data IssueData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 106, "</select></label><button class=\"property-save\">Save</button></form><form method=\"post\" action=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 106, "</select></label><button class=\"property-save\">Salvar</button></form><form method=\"post\" action=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1162,7 +1162,7 @@ func IssueDetail(data IssueData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "<label>Release <select name=\"release_id\"><option value=\"\">No release</option> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 109, "<label>Versão <select name=\"release_id\"><option value=\"\">Sem versão</option> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1208,7 +1208,7 @@ func IssueDetail(data IssueData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 115, "</select></label><button class=\"property-save\">Save</button></form><form method=\"post\" action=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 115, "</select></label><button class=\"property-save\">Salvar</button></form><form method=\"post\" action=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1242,7 +1242,7 @@ func IssueDetail(data IssueData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 118, "<label>Estimate (minutes)<input type=\"number\" min=\"0\" max=\"525600\" name=\"estimated_minutes\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 118, "<label>Estimativa (minutes)<input type=\"number\" min=\"0\" max=\"525600\" name=\"estimated_minutes\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1255,7 +1255,7 @@ func IssueDetail(data IssueData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 119, "\"></label><button class=\"property-save\">Save</button></form><div class=\"property-section\"><h3>Labels</h3><div class=\"labels\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 119, "\"></label><button class=\"property-save\">Salvar</button></form><div class=\"property-section\"><h3>Etiquetas</h3><div class=\"labels\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1278,7 +1278,7 @@ func IssueDetail(data IssueData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "</div><details><summary class=\"subtle-link\">Edit labels</summary><form method=\"post\" action=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 122, "</div><details><summary class=\"subtle-link\">Editar etiquetas</summary><form method=\"post\" action=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1358,7 +1358,7 @@ func IssueDetail(data IssueData) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 131, "<button class=\"button small-button\">Save labels</button></form></details></div><div class=\"property-section\"><h3>Dates</h3><form method=\"post\" action=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 131, "<button class=\"button small-button\">Salvar etiquetas</button></form></details></div><div class=\"property-section\"><h3>Datas</h3><form method=\"post\" action=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1392,7 +1392,7 @@ func IssueDetail(data IssueData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 134, "<label>Start date<input type=\"date\" name=\"start_date\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 134, "<label>Data inicial<input type=\"date\" name=\"start_date\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1405,40 +1405,40 @@ func IssueDetail(data IssueData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 135, "\"></label><label>Due date<input type=\"date\" name=\"due_date\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 135, "\"></label><label>Data limite<input type=\"date\" name=\"due_date\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var77 string
 		templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.JoinStringErrs(components.DateInput(data.Item.DueDate))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 265, Col: 111}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 265, Col: 114}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var77))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 136, "\"></label><button class=\"button small-button\">Save dates</button></form></div><div class=\"property-section muted tiny\"><p>Reported by ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 136, "\"></label><button class=\"button small-button\">Salvar datas</button></form></div><div class=\"property-section muted tiny\"><p>Criada por ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var78 string
 		templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(data.Item.ReporterName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 269, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 269, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 137, "</p><p>Created ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 137, "</p><p>Criada ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var79 string
 		templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.JoinStringErrs(format.Date(data.Item.CreatedAt.Time))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 270, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 270, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var79))
 		if templ_7745c5c3_Err != nil {
@@ -1462,14 +1462,14 @@ func IssueDetail(data IssueData) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if data.Item.ClosedAt.Valid {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 140, "<p>Closed ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 140, "<p>Encerrada em ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var81 string
 			templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinStringErrs(format.Date(data.Item.ClosedAt.Time))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 273, Col: 54}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/pages/issue.templ`, Line: 273, Col: 60}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
 			if templ_7745c5c3_Err != nil {
@@ -1544,7 +1544,7 @@ func NewIssue(data NewIssueData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 144, "</p><h1>Create an issue</h1><p class=\"muted\">Start with a title. Details can follow.</p></div></div><section class=\"panel form-panel wide\"><form method=\"post\" action=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 144, "</p><h1>Criar tarefa</h1><p class=\"muted\">Comece pelo título. Os detalhes podem vir depois.</p></div></div><section class=\"panel form-panel wide\"><form method=\"post\" action=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1565,7 +1565,7 @@ func NewIssue(data NewIssueData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 146, "<label>Title<input name=\"title\" required autofocus maxlength=\"240\" placeholder=\"What needs to happen?\"></label> <label>Description<textarea name=\"description\" rows=\"7\" maxlength=\"50000\" placeholder=\"Context, expected behavior, or a few useful details…\"></textarea></label><div class=\"form-grid\"><label>Type ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 146, "<label>Título<input name=\"title\" required autofocus maxlength=\"240\" placeholder=\"O que precisa ser feito?\"></label> <label>Descrição<textarea name=\"description\" rows=\"7\" maxlength=\"50000\" placeholder=\"Contexto, comportamento esperado ou detalhes úteis…\"></textarea></label><div class=\"form-grid\"><label>Type ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1589,7 +1589,7 @@ func NewIssue(data NewIssueData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 149, "</label> <label>Assignee <select name=\"assignee_id\"><option value=\"\">Unassigned</option> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 149, "</label> <label>Assignee <select name=\"assignee_id\"><option value=\"\">Não atribuída</option> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1625,7 +1625,7 @@ func NewIssue(data NewIssueData) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 153, "</select></label></div><details><summary class=\"subtle-link\">Release, dates, estimate and labels</summary><div class=\"form-grid\"><label>Release <select name=\"release_id\"><option value=\"\">No release</option> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 153, "</select></label></div><details><summary class=\"subtle-link\">Versão, datas, estimativa e etiquetas</summary><div class=\"form-grid\"><label>Versão <select name=\"release_id\"><option value=\"\">Sem versão</option> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1661,7 +1661,7 @@ func NewIssue(data NewIssueData) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 157, "</select></label><label>Estimate (minutes)<input type=\"number\" name=\"estimated_minutes\" value=\"0\" min=\"0\" max=\"525600\"></label><label>Start date<input type=\"date\" name=\"start_date\"></label><label>Due date<input type=\"date\" name=\"due_date\"></label></div><input type=\"hidden\" name=\"labels_present\" value=\"true\"><div class=\"labels label-picker\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 157, "</select></label><label>Estimativa (minutos)<input type=\"number\" name=\"estimated_minutes\" value=\"0\" min=\"0\" max=\"525600\"></label><label>Data inicial<input type=\"date\" name=\"start_date\"></label><label>Data limite<input type=\"date\" name=\"due_date\"></label></div><input type=\"hidden\" name=\"labels_present\" value=\"true\"><div class=\"labels label-picker\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -1710,13 +1710,13 @@ func NewIssue(data NewIssueData) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 162, "\">Cancel</a><button class=\"button primary\">Create issue</button></div></form></section>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 162, "\">Cancelar</a><button class=\"button primary\">Criar tarefa</button></div></form></section>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layouts.Shell(data.Base, "New issue").Render(templ.WithChildren(ctx, templ_7745c5c3_Var83), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.Shell(data.Base, "Nova tarefa").Render(templ.WithChildren(ctx, templ_7745c5c3_Var83), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

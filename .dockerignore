@@ -3,4 +3,6 @@
 .trackline
 trackline
 tmp
-
+.gitignore
+README.md
+README.pt-BR.md

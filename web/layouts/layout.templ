@@ -13,23 +13,25 @@ type Data struct {
 	CSRF     string
 	Path     string
 	Timer    database.GetActiveTimerRow
+	AppName  string
+	HasLogo  bool
 }
 
-templ Document(title, csrf string) {
+templ Document(title, csrf, appName string) {
 	<!DOCTYPE html>
-	<html lang="en">
+	<html lang="pt-BR">
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<meta name="csrf-token" content={ csrf }/>
 			<meta name="htmx-config" content='{"allowEval":false,"includeIndicatorStyles":false,"selfRequestsOnly":true}'/>
-			<title>{ title } · Trackline</title>
+			<title>{ title } · { appName }</title>
 			<link rel="stylesheet" href="/static/app.css"/>
 			<script src="/static/vendor/htmx.min.js" defer></script>
 			<script src="/static/app.js" defer></script>
 		</head>
 		<body>
-			<a class="skip-link" href="#main">Skip to content</a>
+			<a class="skip-link" href="#main">Pular para o conteúdo</a>
 			{ children... }
 			<div id="notice" class="notice" role="alert" hidden></div>
 		</body>
@@ -37,42 +39,54 @@ templ Document(title, csrf string) {
 }
 
 templ Shell(data Data, title string) {
-	@Document(title, data.CSRF) {
+	@Document(title, data.CSRF, data.AppName) {
 		<div class="app-shell">
-			<aside class="sidebar" aria-label="Workspace navigation">
-				<a class="brand" href="/"><span class="brand-mark">t</span>Trackline</a>
-				<div class="workspace-name"><span class="workspace-icon">{ Initial(data.User.WorkspaceName) }</span><span>{ data.User.WorkspaceName }</span><small>Workspace</small></div>
+			<aside class="sidebar" aria-label="Navegação do espaço de trabalho">
+				<a class="brand" href="/">
+					if data.HasLogo {
+						<img class="brand-logo" src="/brand/logo" alt=""/>
+					} else {
+						<span class="brand-mark">{ Initial(data.AppName) }</span>
+					}
+					{ data.AppName }
+				</a>
+				<div class="workspace-name"><span class="workspace-icon">{ Initial(data.User.WorkspaceName) }</span><span>{ data.User.WorkspaceName }</span><small>Espaço de trabalho</small></div>
 				<nav>
-					<a class={ templ.KV("selected", data.Path == "/") } href="/"><span aria-hidden="true">◫</span>Dashboard</a>
-					<a class={ templ.KV("selected", data.Path == "/projects") } href="/projects"><span aria-hidden="true">▤</span>Projects</a>
-					<a class={ templ.KV("selected", data.Path == "/calendar") } href="/calendar"><span aria-hidden="true">▦</span>Calendar</a>
-					<a class={ templ.KV("selected", data.Path == "/time") } href="/time"><span aria-hidden="true">◷</span>Time reports</a>
+					<a class={ templ.KV("selected", data.Path == "/") } href="/"><span aria-hidden="true">◫</span>Painel</a>
+					<a class={ templ.KV("selected", data.Path == "/projects") } href="/projects"><span aria-hidden="true">▤</span>Projetos</a>
+					<a class={ templ.KV("selected", data.Path == "/calendar") } href="/calendar"><span aria-hidden="true">▦</span>Calendário</a>
+					<a class={ templ.KV("selected", data.Path == "/time") } href="/time"><span aria-hidden="true">◷</span>Relatórios de tempo</a>
 				</nav>
-				<div class="nav-heading">Your projects <a href="/projects" aria-label="Create a project">+</a></div>
+				<div class="nav-heading">Seus projetos <a href="/projects" aria-label="Criar projeto">+</a></div>
 				<nav class="project-nav">
 					for _, project := range data.Projects {
 						<a href={ templ.SafeURL("/projects/" + project.Key) }><span class="project-icon">{ Initial(project.Name) }</span><span>{ project.Name }</span><small>{ fmt.Sprint(project.OpenIssues) }</small></a>
 					}
 					if len(data.Projects)==0 {
-						<p class="muted tiny">Your projects will appear here.</p>
+						<p class="muted tiny">Seus projetos aparecerão aqui.</p>
 					}
 				</nav>
 				<div class="sidebar-bottom">
 					if data.Timer.ID!=0 {
-						<a class="running-timer" href={ templ.SafeURL("/issues/" + issue.Reference(data.Timer.ProjectKey, data.Timer.IssueNumber)) }><span class="live-dot"></span>Timer running <strong>{ issue.Reference(data.Timer.ProjectKey,data.Timer.IssueNumber) }</strong></a>
+						<a class="running-timer" href={ templ.SafeURL("/issues/" + issue.Reference(data.Timer.ProjectKey, data.Timer.IssueNumber)) }><span class="live-dot"></span>Cronômetro ativo <strong>{ issue.Reference(data.Timer.ProjectKey,data.Timer.IssueNumber) }</strong></a>
 					}
-					<a class="settings-link" href="/settings">Workspace settings</a>
-					<div class="user-card"><span class="avatar">{ Initial(data.User.Name) }</span><div><strong>{ data.User.Name }</strong><small>{ data.User.Role }</small></div><form method="post" action="/logout"><input type="hidden" name="csrf" value={ data.CSRF }/><button class="icon-button" title="Sign out" aria-label="Sign out">↗</button></form></div>
+					<a class="settings-link" href="/settings">Configurações</a>
+					<div class="user-card"><span class="avatar">{ Initial(data.User.Name) }</span><div><strong>{ data.User.Name }</strong><small>{ Role(data.User.Role) }</small></div><form method="post" action="/logout"><input type="hidden" name="csrf" value={ data.CSRF }/><button class="icon-button" title="Sair" aria-label="Sair">↗</button></form></div>
 				</div>
 			</aside>
 			<div class="app-content">
-				<header class="topbar"><span class="breadcrumb">{ data.User.WorkspaceName } <span>/</span> { title }</span><form role="search" action="/search" method="get"><label class="search-box"><span aria-hidden="true">⌕</span><input name="q" type="search" placeholder="Search issues, projects, releases…" aria-label="Search issues, projects and releases" maxlength="100"/><kbd>/</kbd></label></form></header>
+				<header class="topbar"><span class="breadcrumb">{ data.User.WorkspaceName } <span>/</span> { title }</span><div class="topbar-actions"><button class="theme-toggle" type="button" aria-label="Alternar tema" title="Alternar tema"><span class="theme-light" aria-hidden="true">☾</span><span class="theme-dark" aria-hidden="true">☀</span></button><form role="search" action="/search" method="get"><label class="search-box"><span aria-hidden="true">⌕</span><input name="q" type="search" placeholder="Buscar tarefas, projetos, versões…" aria-label="Buscar tarefas, projetos e versões" maxlength="100"/><kbd>/</kbd></label></form></div></header>
 				<main id="main" class="main">{ children... }
 </main>
-				<footer class="app-footer">Everything a small software team needs. Nothing it doesn't.</footer>
+				<footer class="app-footer">Tudo que uma pequena equipe de software precisa.</footer>
 			</div>
 		</div>
 	}
+}
+
+func Role(value string) string {
+	if value == "admin" { return "Administrador" }
+	return "Membro"
 }
 
 func Initial(value string) string {

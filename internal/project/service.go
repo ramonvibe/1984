@@ -15,7 +15,7 @@ func (s Service) Create(ctx context.Context,user auth.User,name,key,description 
  if user.Role!="admin" { return result,auth.ErrForbidden }
  name,err:=validate.Required("name",name,120); if err!=nil { return result,err }
  key,err=validate.ProjectKey(key); if err!=nil { return result,err }
- if len(description)>20000 { return result,errors.New("description is too long") }
+ if len(description)>20000 { return result,errors.New("a descrição é muito longa") }
  err=database.Transaction(ctx,s.Pool,func(q *database.Queries) error {
   var err error
   result,err=q.CreateProject(ctx,database.CreateProjectParams{WorkspaceID:user.WorkspaceID,Name:name,Key:key,Description:description})
@@ -28,7 +28,7 @@ func (s Service) Update(ctx context.Context,user auth.User,id int64,name,descrip
  if user.Role!="admin" { return auth.ErrForbidden }
  if _,err:=s.Queries.GetProject(ctx,database.GetProjectParams{ID:id,WorkspaceID:user.WorkspaceID}); err!=nil { return err }
  name,err:=validate.Required("name",name,120); if err!=nil { return err }
- if len(description)>20000 { return errors.New("description is too long") }
+ if len(description)>20000 { return errors.New("a descrição é muito longa") }
  if _,err=validate.OneOf("status",status,"active","archived"); err!=nil { return err }
  _,err=s.Queries.UpdateProject(ctx,database.UpdateProjectParams{ID:id,Name:name,Description:description,Status:status}); return err
 }
@@ -41,6 +41,6 @@ func (s Service) Member(ctx context.Context,user auth.User,projectID,memberID in
 }
 func (s Service) Label(ctx context.Context,user auth.User,name,color string) error {
  name,err:=validate.Required("label",name,40); if err!=nil { return err }
- if !regexp.MustCompile(`^#[0-9a-fA-F]{6}$`).MatchString(color) { return errors.New("invalid label color") }
+ if !regexp.MustCompile(`^#[0-9a-fA-F]{6}$`).MatchString(color) { return errors.New("cor de etiqueta inválida") }
  _,err=s.Queries.CreateLabel(ctx,database.CreateLabelParams{WorkspaceID:user.WorkspaceID,Name:name,Color:color}); return err
 }

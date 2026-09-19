@@ -14,7 +14,8 @@ func Parse(value string) (time.Time,error) {
  return time.Parse("2006-01",value)
 }
 func Build(month time.Time,items []database.CalendarRangeRow,projectKey string) Month {
- result:=Month{Title:month.Format("January 2006"),Value:month.Format("2006-01"),Previous:month.AddDate(0,-1,0).Format("2006-01"),Next:month.AddDate(0,1,0).Format("2006-01")}
+ months:=[]string{"janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"}
+ result:=Month{Title:fmt.Sprintf("%s de %d",months[month.Month()-1],month.Year()),Value:month.Format("2006-01"),Previous:month.AddDate(0,-1,0).Format("2006-01"),Next:month.AddDate(0,1,0).Format("2006-01")}
  start:=month.AddDate(0,0,-(int(month.Weekday())+6)%7)
  events:=map[string][]Event{}
  for _,item:=range items {
@@ -34,4 +35,10 @@ func Build(month time.Time,items []database.CalendarRangeRow,projectKey string) 
   result.Days=append(result.Days,Day{Date:date,Events:events[key],Current:date.Month()==month.Month(),Today:key==time.Now().UTC().Format("2006-01-02")})
  }
  return result
+}
+
+func KindName(value string) string {
+ names:=map[string]string{"Release":"Versão","Start":"Início","Due":"Prazo"}
+ if name:=names[value]; name!="" { return name }
+ return value
 }

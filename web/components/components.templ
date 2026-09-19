@@ -10,7 +10,7 @@ import (
 )
 
 func Name(value string) string {
-	names := map[string]string{"in_progress": "In Progress", "todo": "Todo", "backlog": "Backlog", "done": "Done", "review": "Review", "canceled": "Canceled", "bug": "Bug", "feature": "Feature", "improvement": "Improvement", "task": "Task", "low": "Low", "medium": "Medium", "high": "High", "urgent": "Urgent", "planning": "Planning", "active": "Active", "released": "Released", "archived": "Archived"}
+	names := map[string]string{"in_progress": "Em andamento", "todo": "A fazer", "backlog": "Pendente", "done": "Concluída", "review": "Em revisão", "canceled": "Cancelada", "bug": "Erro", "feature": "Funcionalidade", "improvement": "Melhoria", "task": "Tarefa", "low": "Baixa", "medium": "Média", "high": "Alta", "urgent": "Urgente", "planning": "Planejamento", "active": "Ativo", "released": "Publicado", "archived": "Arquivado", "status": "Status", "type": "Tipo", "priority": "Prioridade"}
 	if name, ok := names[value]; ok {
 		return name
 	}
@@ -24,9 +24,9 @@ func DateInput(value pgtype.Date) string {
 }
 func Date(value pgtype.Date) string {
 	if !value.Valid {
-		return "No date"
+		return "Sem data"
 	}
-	return value.Time.Format("Jan 2, 2006")
+	return format.Date(value.Time)
 }
 func ID(value pgtype.Int8) string {
 	if !value.Valid {
@@ -74,7 +74,7 @@ templ Badge(value string) {
 }
 
 templ Priority(value string) {
-	<span class={ "priority priority-" + value } title={ Name(value) + " priority" }>{ Name(value) }</span>
+	<span class={ "priority priority-" + value } title={ "Prioridade " + Name(value) }>{ Name(value) }</span>
 }
 
 templ Select(name, value string, options []string) {
@@ -94,15 +94,15 @@ templ Stat(label, value string) {
 }
 
 templ Progress(done, total int64) {
-	<div class="progress-label"><span>{ fmt.Sprintf("%d of %d complete",done,total) }</span><strong>{ fmt.Sprint(Percent(done,total)) }%</strong></div>
-	<progress value={ fmt.Sprint(done) } max={ fmt.Sprint(max(total, 1)) } aria-label="Release progress"></progress>
+	<div class="progress-label"><span>{ fmt.Sprintf("%d de %d concluídas",done,total) }</span><strong>{ fmt.Sprint(Percent(done,total)) }%</strong></div>
+	<progress value={ fmt.Sprint(done) } max={ fmt.Sprint(max(total, 1)) } aria-label="Progresso da versão"></progress>
 }
 
 templ Bars(title string, rows []database.ReportGroupsRow) {
 	<section class="panel">
-		<div class="panel-heading"><h3>{ title }</h3><span class="muted tiny">Tracked time</span></div>
+		<div class="panel-heading"><h3>{ title }</h3><span class="muted tiny">Tempo registrado</span></div>
 		if len(rows)==0 {
-			<p class="muted chart-empty">No time tracked yet.</p>
+			<p class="muted chart-empty">Nenhum tempo registrado ainda.</p>
 		}
 		for _, row := range rows {
 			<div class="bar-row"><div><span>{ Name(row.Label) }</span><strong>{ format.Duration(row.Seconds) }</strong></div><progress value={ fmt.Sprint(row.Seconds) } max={ fmt.Sprint(max(rows[0].Seconds, 1)) } aria-label={ row.Label }></progress></div>
@@ -111,9 +111,9 @@ templ Bars(title string, rows []database.ReportGroupsRow) {
 }
 
 templ ProjectTabs(key, active string) {
-	<nav class="tabs" aria-label="Project views">
+	<nav class="tabs" aria-label="Seções do projeto">
 		for _, tab := range []struct{
-slug,title string}{{"","Overview"},{"issues","Issues"},{"board","Board"},{"calendar","Calendar"},{"releases","Releases"},{"time","Time"},{"settings","Settings"}} {
+slug,title string}{{"","Visão geral"},{"issues","Tarefas"},{"board","Quadro"},{"calendar","Calendário"},{"releases","Versões"},{"time","Tempo"},{"settings","Configurações"}} {
 			<a href={ templ.SafeURL(strings.TrimRight("/projects/"+key+"/"+tab.slug, "/")) } class={ templ.KV("active", active == tab.slug) } aria-current={ current(active == tab.slug) }>{ tab.title }</a>
 		}
 	</nav>
@@ -140,9 +140,9 @@ templ IssueCard(item database.ListBoardIssuesRow) {
 		</div>
 		<div class="card-bottom">
 			@Badge(item.Type)
-			<span class="card-assignee" title={ Text(item.AssigneeName, "Unassigned") }>
+			<span class="card-assignee" title={ Text(item.AssigneeName, "Não atribuída") }>
 				<span class="avatar small" aria-hidden="true">{ initial(FirstName(Text(item.AssigneeName,"—"))) }</span>
-				<span class="assignee-name">{ FirstName(Text(item.AssigneeName,"Unassigned")) }</span>
+				<span class="assignee-name">{ FirstName(Text(item.AssigneeName,"Não atribuída")) }</span>
 			</span>
 		</div>
 	</article>
@@ -157,6 +157,6 @@ func initial(value string) string {
 
 func FirstName(value string) string {
 	parts := strings.Fields(value)
-	if len(parts) == 0 { return "Unassigned" }
+	if len(parts) == 0 { return "Não atribuída" }
 	return parts[0]
 }

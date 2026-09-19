@@ -20,8 +20,8 @@ import (
  "github.com/ramon/trackline/internal/validate"
 )
 
-var ErrCredentials = errors.New("invalid email or password")
-var ErrForbidden = errors.New("administrator access required")
+var ErrCredentials = errors.New("email ou senha inválidos")
+var ErrForbidden = errors.New("acesso de administrador necessário")
 type User = database.GetSessionUserRow
 type Service struct { Pool *pgxpool.Pool; Queries *database.Queries }
 
@@ -30,7 +30,7 @@ func randBytes(size int) []byte { value:=make([]byte,size); if _,err:=rand.Read(
 func TokenHash(token string) []byte { sum:=sha256.Sum256([]byte(token)); return sum[:] }
 
 func HashPassword(password string) (string,error) {
- if len(password)<12 || len(password)>256 { return "",errors.New("password must contain 12–256 bytes") }
+ if len(password)<12 || len(password)>256 { return "",errors.New("a senha deve ter entre 12 e 256 caracteres") }
  salt:=randBytes(16)
  key,err:=pbkdf2.Key(sha256.New,password,salt,600000,32)
  if err!=nil { return "",err }
@@ -49,7 +49,7 @@ func identity(name,email string) (string,string,error) {
  name,err:=validate.Required("name",name,120); if err!=nil { return "","",err }
  email=strings.ToLower(strings.TrimSpace(email))
  address,err:=mail.ParseAddress(email)
- if err!=nil || address.Address!=email || len(email)>254 { return "","",errors.New("enter a valid email address") }
+ if err!=nil || address.Address!=email || len(email)>254 { return "","",errors.New("digite um email válido") }
  return name,email,nil
 }
 
@@ -60,7 +60,7 @@ func (s Service) Setup(ctx context.Context,workspace,name,email,password string)
  token:=Token()
  err=database.Transaction(ctx,s.Pool,func(q *database.Queries) error {
   if err:=q.LockOnboarding(ctx); err!=nil { return err }
-  count,err:=q.WorkspaceCount(ctx); if err!=nil { return err }; if count!=0 { return errors.New("workspace has already been created") }
+  count,err:=q.WorkspaceCount(ctx); if err!=nil { return err }; if count!=0 { return errors.New("o espaço de trabalho já foi criado") }
   workspace,err:=q.CreateWorkspace(ctx,workspace); if err!=nil { return err }
   user,err:=q.CreateUser(ctx,database.CreateUserParams{WorkspaceID:workspace.ID,Name:name,Email:email,PasswordHash:hash,Role:"admin"}); if err!=nil { return err }
   for _,label:=range []string{"backend","frontend","performance","auth","documentation"} {
