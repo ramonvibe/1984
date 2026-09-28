@@ -83,12 +83,15 @@ func (a *App) Handler() http.Handler {
 	public("POST /setup", a.setup)
 	public("GET /login", a.authPage)
 	public("POST /login", a.login)
+	public("GET /invite/{token}", a.invitePage)
+	public("POST /invite/{token}", a.acceptInvite)
 	public("GET /brand/logo", a.brandLogo)
 	// GitHub authenticates by HMAC rather than browser sessions or CSRF tokens.
 	mux.HandleFunc("POST /webhooks/github", a.webhook)
 	private("POST /logout", a.logout)
 	private("GET /{$}", a.dashboard)
 	private("GET /projects", a.projects)
+	private("GET /my-tasks", a.myTasks)
 	private("POST /projects", a.createProject)
 	private("GET /projects/{key}", a.projectPage)
 	private("GET /projects/{key}/{tab}", a.projectPage)
@@ -107,6 +110,8 @@ func (a *App) Handler() http.Handler {
 	private("POST /issues/{ref}/status", a.moveIssue)
 	private("POST /issues/{ref}/comments", a.createComment)
 	private("POST /issues/{ref}/time", a.trackTime)
+	private("POST /issues/{ref}/subtasks", a.addSubtask)
+	private("POST /issues/{ref}/subtasks/{id}", a.toggleSubtask)
 	private("GET /releases/{id}", a.releasePage)
 	private("POST /releases/{id}", a.updateRelease)
 	private("POST /releases/{id}/generate", a.generateChangelog)
@@ -116,9 +121,15 @@ func (a *App) Handler() http.Handler {
 	private("GET /time", a.timePage)
 	private("GET /search", a.search)
 	private("GET /settings", a.settings)
+	private("GET /profile/avatar", a.profileAvatar)
+	private("POST /settings/profile", a.updateProfile)
 	private("POST /settings/users", a.addUser)
 	private("POST /settings/labels", a.addLabel)
 	private("POST /settings/branding", a.updateBranding)
+	private("POST /settings/sprint-options", a.updateSprintOptions)
+	private("POST /settings/invites", a.createInvite)
+	private("POST /settings/users/{id}/role", a.updateUserRole)
+	private("POST /workspaces/{id}/switch", a.switchWorkspace)
 	origin := http.NewCrossOriginProtection()
 	return a.headers(origin.Handler(mux))
 }
@@ -162,9 +173,15 @@ func (a *App) wrap(h handler, private bool) http.HandlerFunc {
 			a.cookie(w, "csrf", csrf, 30*86400)
 		}
 		r = r.WithContext(context.WithValue(r.Context(), csrfKey, csrf))
-		r.Body = http.MaxBytesReader(w, r.Body, 2<<20)
+		r.Body = http.MaxBytesReader(w, r.Body, 6<<20)
 		if r.Method != "GET" && r.Method != "HEAD" {
-			if err := r.ParseForm(); err != nil {
+			var err error
+			if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+				err = r.ParseMultipartForm(6 << 20)
+			} else {
+				err = r.ParseForm()
+			}
+			if err != nil {
 				http.Error(w, "Formulário inválido ou grande demais", 400)
 				return
 			}
@@ -215,6 +232,21 @@ func User(r *http.Request) auth.User { user, _ := r.Context().Value(userKey).(au
 func csrf(r *http.Request) string    { value, _ := r.Context().Value(csrfKey).(string); return value }
 func (a *App) base(r *http.Request) (layouts.Data, error) {
 	data := layouts.Data{User: User(r), CSRF: csrf(r), Path: r.URL.Path, AppName: User(r).AppName, HasLogo: User(r).HasLogo}
+	rows, workspacesErr := a.Pool.Query(r.Context(), "SELECT DISTINCT w.id,w.name FROM users u JOIN workspaces w ON w.id=u.workspace_id WHERE lower(u.email)=lower($1) AND u.active ORDER BY w.name", data.User.Email)
+	if workspacesErr != nil {
+		return data, workspacesErr
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var option layouts.WorkspaceOption
+		if workspacesErr = rows.Scan(&option.ID, &option.Name); workspacesErr != nil {
+			return data, workspacesErr
+		}
+		data.Workspaces = append(data.Workspaces, option)
+	}
+	if workspacesErr = rows.Err(); workspacesErr != nil {
+		return data, workspacesErr
+	}
 	var err error
 	data.Projects, err = a.Queries.ListProjects(r.Context(), data.User.WorkspaceID)
 	if err != nil {

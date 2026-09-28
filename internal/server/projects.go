@@ -54,13 +54,13 @@ func (a *App) projectPage(w http.ResponseWriter, r *http.Request) error {
 		}
 		data.Status = r.URL.Query().Get("status")
 		data.Type = r.URL.Query().Get("type")
-		data.Issues, err = a.Queries.ListProjectIssues(ctx, database.ListProjectIssuesParams{ProjectID: data.Project.ID, Column2: data.Status, Column3: data.Type, Limit: 51, Offset: int32((data.Page - 1) * 50)})
+		data.Issues, err = a.Queries.ListProjectIssues(ctx, database.ListProjectIssuesParams{ProjectID: data.Project.ID, Column2: data.Status, Column3: data.Type, Limit: 500, Offset: 0})
 		if err != nil {
 			return err
 		}
-		if len(data.Issues) > 50 {
-			data.HasNext = true
-			data.Issues = data.Issues[:50]
+		data.Sprints, err = a.Queries.ListProjectSprints(ctx, data.Project.ID)
+		if err != nil {
+			return err
 		}
 		if data.Tab == "" {
 			data.Members, err = a.Queries.ListProjectMembers(ctx, data.Project.ID)
@@ -71,6 +71,9 @@ func (a *App) projectPage(w http.ResponseWriter, r *http.Request) error {
 			if err != nil || data.SprintID < -1 {
 				return errors.New("sprint inválida")
 			}
+		}
+		if _, present := r.URL.Query()["sprint"]; !present {
+			_ = a.Pool.QueryRow(ctx, "SELECT id FROM sprints WHERE project_id=$1 AND started_at IS NOT NULL ORDER BY started_at DESC LIMIT 1", data.Project.ID).Scan(&data.SprintID)
 		}
 		if data.SprintID > 0 {
 			selected, queryErr := a.Queries.GetProjectSprint(ctx, database.GetProjectSprintParams{ID: data.SprintID, ProjectID: data.Project.ID})

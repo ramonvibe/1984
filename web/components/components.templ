@@ -113,7 +113,7 @@ templ Bars(title string, rows []database.ReportGroupsRow) {
 templ ProjectTabs(key, active string) {
 	<nav class="tabs" aria-label="Seções do projeto">
 		for _, tab := range []struct{
-slug,title string}{{"","Visão geral"},{"issues","Tarefas"},{"board","Quadro"},{"calendar","Calendário"},{"releases","Versões"},{"time","Tempo"},{"settings","Configurações"}} {
+slug,title string}{{"","Visão geral"},{"issues","Todas as tarefas"},{"board","Quadro"},{"calendar","Calendário"},{"releases","Versões"},{"time","Tempo"},{"settings","Configurações"}} {
 			<a href={ templ.SafeURL(strings.TrimRight("/projects/"+key+"/"+tab.slug, "/")) } class={ templ.KV("active", active == tab.slug) } aria-current={ current(active == tab.slug) }>{ tab.title }</a>
 		}
 	</nav>
@@ -126,13 +126,14 @@ func current(active bool) string {
 	return "false"
 }
 
-templ IssueCard(item database.ListBoardIssuesRow) {
+templ IssueCard(item database.ListBoardIssuesRow, csrf ...string) {
 	<article id={ fmt.Sprintf("issue-card-%d", item.ID) } class="issue-card" draggable="true" data-issue={ issue.Reference(item.ProjectKey, item.Number) }>
 		<div class="card-meta">
 			<span class="mono">{ issue.Reference(item.ProjectKey,item.Number) }</span>
 			@Priority(item.Priority)
 		</div>
 		<a class="card-title" href={ templ.SafeURL("/issues/" + issue.Reference(item.ProjectKey, item.Number)) }>{ item.Title }</a>
+		<details class="card-subtasks"><summary>+ Subtarefa</summary><form method="post" action={ "/issues/" + issue.Reference(item.ProjectKey,item.Number) + "/subtasks" } class="inline-form"><input type="hidden" name="csrf" value={ csrfValue(csrf) }/><input name="title" required maxlength="240" placeholder="Nova subtarefa" aria-label="Nova subtarefa"/><button class="button small-button">Adicionar</button></form></details>
 		<div class="labels">
 			for _, label := range Labels(item.LabelNames) {
 				<span class="label">{ label }</span>
@@ -147,6 +148,8 @@ templ IssueCard(item database.ListBoardIssuesRow) {
 		</div>
 	</article>
 }
+
+func csrfValue(value []string) string { if len(value)>0 { return value[0] }; return "" }
 
 func initial(value string) string {
 	for _, r := range value {

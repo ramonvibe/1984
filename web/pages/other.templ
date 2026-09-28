@@ -83,17 +83,31 @@ func difference(value int64) string {
 templ Settings(data SettingsData) {
 	@layouts.Shell(data.Base, "Configurações") {
 		<div class="page-heading"><div><p class="eyebrow">{ data.Base.User.WorkspaceName }</p><h1>Configurações</h1><p class="muted">Boas opções padrão e controles úteis.</p></div></div>
+		<section class="panel form-panel"><div class="panel-heading"><h2>Meu perfil</h2></div><form method="post" action="/settings/profile" enctype="multipart/form-data" class="stack">@components.CSRF(data.Base.CSRF)<label>Seu nome<input name="name" required maxlength="120" value={ data.Base.User.Name }/></label><label>Foto de perfil<input type="file" name="avatar" accept="image/png,image/jpeg,image/webp,image/gif"/><small>PNG, JPEG, WebP ou GIF de até 5 MB.</small></label>
+			if data.Base.User.HasAvatar {
+				<div class="branding-preview"><img src="/profile/avatar" alt="Foto atual"/><label class="checkbox-label"><input type="checkbox" name="remove_avatar" value="1"/>Remover foto atual</label></div>
+			}
+			<div><button class="button primary">Salvar perfil</button></div></form></section>
 		if data.Base.User.Role=="admin" {
 			<section class="panel form-panel">
 				<div class="panel-heading"><h2>Identidade do sistema</h2></div>
 				<form method="post" action="/settings/branding" enctype="multipart/form-data" class="stack">
 					@components.CSRF(data.Base.CSRF)
 					<label>Nome do sistema<input name="app_name" required maxlength="60" value={ data.Base.AppName }/></label>
-					<label>Logo<input type="file" name="logo" accept="image/png,image/jpeg,image/webp,image/gif"/><small>PNG, JPEG, WebP ou GIF de até 1 MB.</small></label>
+					<label>Logo<input type="file" name="logo" accept="image/png,image/jpeg,image/webp,image/gif"/><small>PNG, JPEG, WebP ou GIF de até 5 MB.</small></label>
 					if data.Base.HasLogo {
 						<div class="branding-preview"><img src="/brand/logo" alt="Logo atual"/><label class="checkbox-label"><input type="checkbox" name="remove_logo" value="1"/>Remover logo atual</label></div>
 					}
 					<div><button class="button primary">Salvar identidade</button></div>
+				</form>
+			</section>
+			<section class="panel form-panel">
+				<div class="panel-heading"><h2>Comportamento das sprints</h2></div>
+				<form method="post" action="/settings/sprint-options" class="stack">
+					@components.CSRF(data.Base.CSRF)
+					<label class="checkbox-label"><input type="checkbox" name="sprints_are_releases" value="1" checked?={ data.Base.User.SprintsAreReleases }/> Sprints são versões</label>
+					<p class="muted tiny">Ao criar uma sprint, o 1984 cria automaticamente uma versão com o mesmo nome no projeto.</p>
+					<div><button class="button">Salvar opção</button></div>
 				</form>
 			</section>
 		}
@@ -104,13 +118,25 @@ templ Settings(data SettingsData) {
 					<thead><tr><th>Nome</th><th>Email</th><th>Função</th></tr></thead>
 					<tbody>
 						for _, user := range data.Users {
-							<tr><td>{ user.Name }</td><td>{ user.Email }</td><td>{ layouts.Role(user.Role) }</td></tr>
+							<tr><td>{ user.Name }</td><td>{ user.Email }</td><td>{ layouts.Role(user.Role) }
+								if data.Base.User.Role=="admin" && user.Role!="admin" {
+									<form method="post" action={ fmt.Sprintf("/settings/users/%d/role",user.ID) } class="inline-form">@components.CSRF(data.Base.CSRF)<button class="button small-button">Tornar administrador</button></form>
+								}
+							</td></tr>
 						}
 					</tbody>
 				</table>
 			</div>
 		</section>
 		if data.Base.User.Role=="admin" {
+			<section class="panel form-panel">
+				<div class="panel-heading"><h2>Convite para o workspace</h2></div>
+				<p class="muted">Quem usar o link entra como membro. O convite expira em 7 dias.</p>
+				<form method="post" action="/settings/invites">@components.CSRF(data.Base.CSRF)<button class="button primary">Gerar link de convite</button></form>
+				if data.InviteURL!="" {
+					<label>Link gerado<input readonly value={ data.InviteURL } onclick="this.select()"/></label>
+				}
+			</section>
 			<details class="panel form-panel">
 				<summary>Adicionar usuário</summary>
 				<form method="post" action="/settings/users" class="stack">

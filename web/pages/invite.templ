@@ -1,0 +1,18 @@
+package pages
+
+import (
+ "github.com/ramon/trackline/web/components"
+ "github.com/ramon/trackline/web/layouts"
+)
+
+templ Invite(data InviteData) {
+ @layouts.Document("Convite", data.CSRF, data.AppName) {
+  <main class="auth-page"><a class="brand" href="/"><span class="brand-mark">{ layouts.Initial(data.AppName) }</span>{ data.AppName }</a><section class="auth-card"><p class="eyebrow">CONVITE</p><h1>Entrar em { data.WorkspaceName }</h1>
+   if data.LoggedIn {
+    <p class="muted">{ data.CurrentName }, aceite para adicionar este workspace à sua conta.</p><form method="post" action={ "/invite/"+data.Token }>@components.CSRF(data.CSRF)<input type="hidden" name="accept_current" value="1"/><button class="button primary full">Aceitar convite</button></form>
+   } else {
+    <p class="muted">Entre com sua conta existente ou crie uma conta.</p><form method="post" action={ "/invite/"+data.Token } class="stack">@components.CSRF(data.CSRF)<label>Nome<input name="name" maxlength="120" autocomplete="name"/></label><label>Email<input type="email" name="email" required maxlength="254" autocomplete="email"/></label><label>Senha<input type="password" name="password" required maxlength="256"/></label><small class="muted">Conta nova: mínimo de 12 caracteres. Conta existente: use sua senha atual.</small><button class="button primary full">Entrar no workspace</button></form>
+   }
+  </section></main>
+ }
+}

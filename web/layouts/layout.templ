@@ -15,7 +15,9 @@ type Data struct {
 	Timer    database.GetActiveTimerRow
 	AppName  string
 	HasLogo  bool
+	Workspaces []WorkspaceOption
 }
+type WorkspaceOption struct { ID int64; Name string }
 
 templ Document(title, csrf, appName string) {
 	<!DOCTYPE html>
@@ -51,8 +53,18 @@ templ Shell(data Data, title string) {
 					{ data.AppName }
 				</a>
 				<div class="workspace-name"><span class="workspace-icon">{ Initial(data.User.WorkspaceName) }</span><span>{ data.User.WorkspaceName }</span><small>Espaço de trabalho</small></div>
+				if len(data.Workspaces)>1 {
+					<details class="workspace-switcher"><summary>Trocar workspace</summary>
+						for _, workspace := range data.Workspaces {
+							if workspace.ID!=data.User.WorkspaceID {
+								<form method="post" action={ fmt.Sprintf("/workspaces/%d/switch",workspace.ID) }><input type="hidden" name="csrf" value={ data.CSRF }/><button>{ workspace.Name }</button></form>
+							}
+						}
+					</details>
+				}
 				<nav>
 					<a class={ templ.KV("selected", data.Path == "/") } href="/"><span aria-hidden="true">◫</span>Painel</a>
+					<a class={ templ.KV("selected", data.Path == "/my-tasks") } href="/my-tasks"><span aria-hidden="true">✓</span>Minhas tarefas</a>
 					<a class={ templ.KV("selected", data.Path == "/projects") } href="/projects"><span aria-hidden="true">▤</span>Projetos</a>
 					<a class={ templ.KV("selected", data.Path == "/calendar") } href="/calendar"><span aria-hidden="true">▦</span>Calendário</a>
 					<a class={ templ.KV("selected", data.Path == "/time") } href="/time"><span aria-hidden="true">◷</span>Relatórios de tempo</a>
@@ -71,7 +83,14 @@ templ Shell(data Data, title string) {
 						<a class="running-timer" href={ templ.SafeURL("/issues/" + issue.Reference(data.Timer.ProjectKey, data.Timer.IssueNumber)) }><span class="live-dot"></span>Cronômetro ativo <strong>{ issue.Reference(data.Timer.ProjectKey,data.Timer.IssueNumber) }</strong></a>
 					}
 					<a class="settings-link" href="/settings">Configurações</a>
-					<div class="user-card"><span class="avatar">{ Initial(data.User.Name) }</span><div><strong>{ data.User.Name }</strong><small>{ Role(data.User.Role) }</small></div><form method="post" action="/logout"><input type="hidden" name="csrf" value={ data.CSRF }/><button class="icon-button" title="Sair" aria-label="Sair">↗</button></form></div>
+					<div class="user-card">
+						if data.User.HasAvatar {
+							<img class="avatar avatar-image" src="/profile/avatar" alt=""/>
+						} else {
+							<span class="avatar">{ Initial(data.User.Name) }</span>
+						}
+						<div><strong>{ data.User.Name }</strong><small>{ Role(data.User.Role) }</small></div><form method="post" action="/logout"><input type="hidden" name="csrf" value={ data.CSRF }/><button class="icon-button" title="Sair" aria-label="Sair">↗</button></form>
+					</div>
 				</div>
 			</aside>
 			<div class="app-content">

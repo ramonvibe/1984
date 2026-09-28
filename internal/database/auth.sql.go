@@ -122,7 +122,7 @@ func (q *Queries) DeleteSession(ctx context.Context, tokenHash []byte) error {
 
 const getSessionUser = `-- name: GetSessionUser :one
 SELECT u.id, u.workspace_id, u.name, u.email, u.role, u.active, u.created_at, u.updated_at,
-       w.name AS workspace_name, w.app_name, w.logo IS NOT NULL AS has_logo
+       w.name AS workspace_name, w.app_name, w.logo IS NOT NULL AS has_logo, w.sprints_are_releases, u.avatar IS NOT NULL AS has_avatar
 FROM sessions s
 JOIN users u ON u.id = s.user_id
 JOIN workspaces w ON w.id = u.workspace_id
@@ -141,6 +141,8 @@ type GetSessionUserRow struct {
 	WorkspaceName string             `json:"workspace_name"`
 	AppName       string             `json:"app_name"`
 	HasLogo       bool               `json:"has_logo"`
+	SprintsAreReleases bool          `json:"sprints_are_releases"`
+	HasAvatar          bool          `json:"has_avatar"`
 }
 
 func (q *Queries) GetSessionUser(ctx context.Context, tokenHash []byte) (GetSessionUserRow, error) {
@@ -158,6 +160,8 @@ func (q *Queries) GetSessionUser(ctx context.Context, tokenHash []byte) (GetSess
 		&i.WorkspaceName,
 		&i.AppName,
 		&i.HasLogo,
+		&i.SprintsAreReleases,
+		&i.HasAvatar,
 	)
 	return i, err
 }

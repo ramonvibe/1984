@@ -41,6 +41,10 @@ func (s Service) CreateSprint(ctx context.Context, user auth.User, projectID int
 	if err != nil {
 		return result, err
 	}
+	var createsRelease bool
+	if err = s.Pool.QueryRow(ctx, "SELECT sprints_are_releases FROM workspaces WHERE id=$1", user.WorkspaceID).Scan(&createsRelease); err != nil {
+		return result, err
+	}
 	err = database.Transaction(ctx, s.Pool, func(q *database.Queries) error {
 		project, err := q.GetProject(ctx, database.GetProjectParams{ID: projectID, WorkspaceID: user.WorkspaceID})
 		if err != nil {
@@ -52,6 +56,11 @@ func (s Service) CreateSprint(ctx context.Context, user auth.User, projectID int
 		result, err = q.CreateSprint(ctx, database.CreateSprintParams{ProjectID: projectID, Name: name, StartDate: first, EndDate: last})
 		if err != nil {
 			return err
+		}
+		if createsRelease {
+			if _, err = q.CreateRelease(ctx, database.CreateReleaseParams{ProjectID: projectID, Version: name, Name: name, Status: "planning", Description: "", TargetDate: pgtype.Date{}}); err != nil {
+				return err
+			}
 		}
 		return activity.Record(ctx, q, user.WorkspaceID, projectID, 0, user.ID, "sprint.created", map[string]string{"title": name})
 	})

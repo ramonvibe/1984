@@ -1,9 +1,13 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/ramon/trackline/internal/database"
 )
 
 func (a *App) createSprint(w http.ResponseWriter, r *http.Request) error {
@@ -32,6 +36,39 @@ func (a *App) startSprint(w http.ResponseWriter, r *http.Request) error {
 		return errors.New("selecione uma sprint para iniciar")
 	}
 	if err = a.Projects.StartSprint(r.Context(), User(r), project.ID, sprintID); err != nil {
+		return err
+	}
+	sprint, err := a.Queries.GetProjectSprint(r.Context(), database.GetProjectSprintParams{ID: sprintID, ProjectID: project.ID})
+	if err != nil {
+		return err
+	}
+	tx, err := a.Pool.Begin(r.Context())
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(context.Background())
+	var creates bool
+	if err = tx.QueryRow(r.Context(), "SELECT sprints_are_releases FROM workspaces WHERE id=$1", User(r).WorkspaceID).Scan(&creates); err != nil {
+		return err
+	}
+	if creates {
+		if _, err = tx.Exec(r.Context(), "INSERT INTO releases(project_id,version,name,status,target_date) VALUES($1,$2,$2,'planning',$3) ON CONFLICT(project_id,version) DO NOTHING", project.ID, sprint.Name, sprint.EndDate); err != nil {
+			return err
+		}
+	}
+	var releaseID int64
+	err = tx.QueryRow(r.Context(), "SELECT id FROM releases WHERE project_id=$1 AND version=$2", project.ID, sprint.Name).Scan(&releaseID)
+	if err == nil {
+		if _, err = tx.Exec(r.Context(), "UPDATE releases SET status='planning',updated_at=now() WHERE project_id=$1 AND status='active' AND id<>$2", project.ID, releaseID); err != nil {
+			return err
+		}
+		if _, err = tx.Exec(r.Context(), "UPDATE releases SET status='active',updated_at=now() WHERE id=$1", releaseID); err != nil {
+			return err
+		}
+	} else if !errors.Is(err, pgx.ErrNoRows) {
+		return err
+	}
+	if err = tx.Commit(r.Context()); err != nil {
 		return err
 	}
 	redirect(w, r, "/projects/"+project.Key+"/board?sprint="+strconv.FormatInt(sprintID, 10))

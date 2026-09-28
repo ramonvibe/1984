@@ -1,0 +1,26 @@
+package pages
+
+import (
+ "fmt"
+ "github.com/ramon/trackline/internal/format"
+ "github.com/ramon/trackline/internal/issue"
+ "github.com/ramon/trackline/web/components"
+ "github.com/ramon/trackline/web/layouts"
+)
+
+templ MyTasks(data MyTasksData) {
+ @layouts.Shell(data.Base, "Minhas tarefas") {
+  <div class="page-heading"><div><p class="eyebrow">ACOMPANHE SEU TRABALHO</p><h1>Minhas tarefas</h1><p class="muted">Tarefas atribuídas a você em todos os projetos.</p></div></div>
+  <section class="panel recent-panel">
+   <div class="panel-heading"><h2>{ fmt.Sprint(len(data.Tasks)) } tarefas</h2></div>
+   if len(data.Tasks)==0 {
+    @components.Empty("Nada atribuído", "Quando uma tarefa for atribuída a você, ela aparecerá aqui.")
+   }
+   for _, item := range data.Tasks {
+    <a class="issue-row" href={ templ.SafeURL("/issues/" + issue.Reference(item.ProjectKey,item.Number)) }>
+     <span class="mono muted">{ issue.Reference(item.ProjectKey,item.Number) }</span><strong>{ item.Title }</strong>@components.Badge(item.Status)<span class="muted tiny">{ format.Relative(item.UpdatedAt) }</span>
+    </a>
+   }
+  </section>
+ }
+}

@@ -37,6 +37,22 @@ templ IssueDetail(data IssueData) {
 					@components.Badge(data.Item.Status)
 				</div>
 				<section class="issue-section">
+					<div class="section-heading"><h2>Subtarefas</h2><span class="muted tiny">{ fmt.Sprint(len(data.Subtasks)) }</span></div>
+					<form method="post" action={ issueAction(data) + "/subtasks" } class="inline-form subtask-add">
+						@components.CSRF(data.Base.CSRF)
+						<input name="title" required maxlength="240" placeholder="Adicionar subtarefa…" aria-label="Nova subtarefa"/><button class="button small-button">+ Adicionar</button>
+					</form>
+					<div class="subtask-list">
+						for _, subtask := range data.Subtasks {
+							<form method="post" action={ issueAction(data) + "/subtasks/" + fmt.Sprint(subtask.ID) } class="subtask-item">
+								@components.CSRF(data.Base.CSRF)
+								<button class="subtask-check" title="Alternar conclusão" aria-label="Alternar conclusão">{ subtaskCheck(subtask.Completed) }</button>
+								<span class={ subtaskClass(subtask.Completed) }>{ subtask.Title }</span>
+							</form>
+						}
+					</div>
+				</section>
+				<section class="issue-section">
 					<div class="section-heading"><h2>Descrição</h2></div>
 					if data.Item.Description=="" {
 						<p class="muted">Adicione um pouco de contexto à tarefa.</p>
@@ -277,6 +293,9 @@ name,label,value string; options []string}{{"status","Status",data.Item.Status,i
 		</div>
 	</div>
 }
+
+func subtaskClass(completed bool) string { if completed { return "subtask-completed" }; return "" }
+func subtaskCheck(completed bool) string { if completed { return "✓" }; return "" }
 
 func issueAction(data IssueData) string {
 	return "/issues/" + issue.Reference(data.Item.ProjectKey, data.Item.Number)

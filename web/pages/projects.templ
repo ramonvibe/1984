@@ -2,6 +2,7 @@ package pages
 
 import (
 	"fmt"
+	"github.com/ramon/trackline/internal/database"
 	"github.com/ramon/trackline/internal/format"
 	"github.com/ramon/trackline/internal/issue"
 	"github.com/ramon/trackline/internal/release"
@@ -65,7 +66,7 @@ templ Project(data ProjectData) {
 							<div class="board-cards">
 								for _, item := range data.Board {
 									if item.Status==status {
-										@components.IssueCard(item)
+										@components.IssueCard(item, data.Base.CSRF)
 									}
 								}
 							</div>
@@ -127,7 +128,7 @@ func boardStatuses(data ProjectData) []string {
 templ IssueList(data ProjectData) {
 	<section class="panel list-panel">
 		<div class="panel-heading">
-			<h2>Tarefas</h2>
+			<h2>Todas as tarefas</h2>
 			<form method="get" class="inline-form" action={ "/projects/" + data.Project.Key + "/issues" }>
 				<label class="sr-only" for="filter-status">Status</label>
 				<select id="filter-status" name="status">
@@ -147,50 +148,25 @@ templ IssueList(data ProjectData) {
 		if len(data.Issues)==0 {
 			@components.Empty("Nenhuma tarefa aqui", "Crie uma tarefa ou ajuste os filtros.")
 		} else {
-			<div class="table-scroll">
-				<table class="issue-table">
-					<thead><tr><th>Tarefa</th><th>Título</th><th>Status</th><th>Prioridade</th><th>Responsável</th></tr></thead>
-					<tbody>
-						for _, item := range data.Issues {
-							<tr>
-								<td><a class="mono muted" href={ templ.SafeURL("/issues/" + issue.Reference(item.ProjectKey, item.Number)) }>{ issue.Reference(item.ProjectKey,item.Number) }</a></td>
-								<td>
-									<a class="issue-title" href={ templ.SafeURL("/issues/" + issue.Reference(item.ProjectKey, item.Number)) }>{ item.Title }</a>
-									<div class="labels">
-										<span class="muted tiny">{ components.Name(item.Type) }</span>
-										for _, label := range components.Labels(item.LabelNames) {
-											<span class="label">{ label }</span>
-										}
-									</div>
-								</td>
-								<td>
-									@components.Badge(item.Status)
-								</td>
-								<td>
-									@components.Priority(item.Priority)
-								</td>
-								<td>
-									{ components.Text(item.AssigneeName,"Não atribuída") }
-								</td>
-							</tr>
-						}
-					</tbody>
-				</table>
-			</div>
+			@IssueGroup("Backlog", data.Issues, 0)
+			for _, sprint := range data.Sprints {
+				@IssueGroup(sprint.Name, data.Issues, sprint.ID)
+			}
 		}
-		<div class="pagination">
-			<span class="muted tiny">Página { fmt.Sprint(max(data.Page,1)) } · 50 tarefas por página</span>
-			<div>
-				if data.Page>1 {
-					<a class="button small-button" href={ templ.SafeURL(issuePageURL(data, data.Page-1)) }>Anterior</a>
-				}
-				if data.HasNext {
-					<a class="button small-button" href={ templ.SafeURL(issuePageURL(data, data.Page+1)) }>Próxima</a>
-				}
-			</div>
-		</div>
 	</section>
 }
+
+templ IssueGroup(name string, items []database.ListProjectIssuesRow, sprintID int64) {
+	<details class="task-group" open><summary>{ name } <span class="muted tiny">{ fmt.Sprint(issueGroupCount(items,sprintID)) }</span></summary><div class="table-scroll"><table class="issue-table"><thead><tr><th>Tarefa</th><th>Título</th><th>Status</th><th>Prioridade</th><th>Responsável</th></tr></thead><tbody>
+		for _, item := range items {
+			if (sprintID==0 && !item.SprintID.Valid) || item.SprintID.Int64==sprintID {
+				<tr><td><a class="mono muted" href={ templ.SafeURL("/issues/"+issue.Reference(item.ProjectKey,item.Number)) }>{ issue.Reference(item.ProjectKey,item.Number) }</a></td><td><a class="issue-title" href={ templ.SafeURL("/issues/"+issue.Reference(item.ProjectKey,item.Number)) }>{ item.Title }</a></td><td>@components.Badge(item.Status)</td><td>@components.Priority(item.Priority)</td><td>{ components.Text(item.AssigneeName,"Não atribuída") }</td></tr>
+			}
+		}
+	</tbody></table></div></details>
+}
+
+func issueGroupCount(items []database.ListProjectIssuesRow,sprintID int64) int { n:=0; for _,item:=range items { if (sprintID==0&&!item.SprintID.Valid)||item.SprintID.Int64==sprintID { n++ } }; return n }
 
 func issuePageURL(data ProjectData, page int) string {
 	return "/projects/" + data.Project.Key + "/issues?" + url.Values{"page": {fmt.Sprint(page)}, "status": {data.Status}, "type": {data.Type}}.Encode()

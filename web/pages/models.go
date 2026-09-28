@@ -4,7 +4,25 @@ import (
 	"github.com/ramon/trackline/internal/calendar"
 	"github.com/ramon/trackline/internal/database"
 	"github.com/ramon/trackline/web/layouts"
+	"time"
 )
+
+type MyTask struct {
+	ProjectKey string
+	Number     int32
+	Title      string
+	Status     string
+	UpdatedAt  time.Time
+}
+type MyTasksData struct {
+	Base  layouts.Data
+	Tasks []MyTask
+}
+type Subtask struct {
+	ID        int64
+	Title     string
+	Completed bool
+}
 
 type DashboardData struct {
 	Base     layouts.Data
@@ -54,6 +72,7 @@ type IssueData struct {
 	Commits        []database.GithubCommit
 	PRs            []database.GithubPullRequest
 	Spent          int64
+	Subtasks       []Subtask
 }
 type NewIssueData struct {
 	Base     layouts.Data
@@ -75,10 +94,15 @@ type SettingsData struct {
 	Users         []database.ListUsersRow
 	Labels        []database.Label
 	GitHubEnabled bool
+	InviteURL     string
 }
 type SearchData struct {
 	Base   layouts.Data
 	Query  string
 	Issues []database.SearchIssuesRow
 	Others []database.SearchProjectsAndReleasesRow
+}
+type InviteData struct {
+	CSRF, AppName, WorkspaceName, Token, CurrentName string
+	HasLogo, LoggedIn                                bool
 }
