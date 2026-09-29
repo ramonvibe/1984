@@ -99,6 +99,8 @@ func (a *App) acceptInvite(w http.ResponseWriter, r *http.Request) error {
 	err = a.Pool.QueryRow(r.Context(), "SELECT id FROM users WHERE workspace_id=$1 AND lower(email)=lower($2)", workspaceID, email).Scan(&userID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		err = a.Pool.QueryRow(r.Context(), "INSERT INTO users(workspace_id,name,email,password_hash,role) VALUES($1,$2,$3,$4,'member') RETURNING id", workspaceID, name, email, hash).Scan(&userID)
+	} else if err == nil {
+		_, err = a.Pool.Exec(r.Context(), "UPDATE users SET active=true,role='member',updated_at=now() WHERE id=$1", userID)
 	}
 	if err != nil {
 		return err
@@ -149,6 +151,59 @@ func (a *App) updateUserRole(w http.ResponseWriter, r *http.Request) error {
 	}
 	if tag.RowsAffected() != 1 {
 		return pgx.ErrNoRows
+	}
+	redirect(w, r, "/settings")
+	return nil
+}
+
+func (a *App) resetUserPassword(w http.ResponseWriter, r *http.Request) error {
+	if User(r).Role != "admin" {
+		return auth.ErrForbidden
+	}
+	id, err := parseID(r.PathValue("id"))
+	if err != nil {
+		return err
+	}
+	hash, err := auth.HashPassword(r.FormValue("password"))
+	if err != nil {
+		return err
+	}
+	tag, err := a.Pool.Exec(r.Context(), "UPDATE users SET password_hash=$1,updated_at=now() WHERE id=$2 AND workspace_id=$3 AND active", hash, id, User(r).WorkspaceID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() != 1 {
+		return pgx.ErrNoRows
+	}
+	_, err = a.Pool.Exec(r.Context(), "DELETE FROM sessions WHERE user_id=$1", id)
+	if err != nil {
+		return err
+	}
+	redirect(w, r, "/settings")
+	return nil
+}
+
+func (a *App) deleteUser(w http.ResponseWriter, r *http.Request) error {
+	if User(r).Role != "admin" {
+		return auth.ErrForbidden
+	}
+	id, err := parseID(r.PathValue("id"))
+	if err != nil {
+		return err
+	}
+	if id == User(r).ID {
+		return errors.New("não é possível remover seu próprio usuário")
+	}
+	tag, err := a.Pool.Exec(r.Context(), "UPDATE users SET active=false,role='member',updated_at=now() WHERE id=$1 AND workspace_id=$2 AND active", id, User(r).WorkspaceID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() != 1 {
+		return pgx.ErrNoRows
+	}
+	_, err = a.Pool.Exec(r.Context(), "DELETE FROM sessions WHERE user_id=$1", id)
+	if err != nil {
+		return err
 	}
 	redirect(w, r, "/settings")
 	return nil

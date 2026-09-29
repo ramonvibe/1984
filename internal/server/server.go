@@ -132,6 +132,8 @@ func (a *App) Handler() http.Handler {
 	private("POST /settings/sprint-options", a.updateSprintOptions)
 	private("POST /settings/invites", a.createInvite)
 	private("POST /settings/users/{id}/role", a.updateUserRole)
+	private("POST /settings/users/{id}/password", a.resetUserPassword)
+	private("POST /settings/users/{id}/delete", a.deleteUser)
 	private("POST /workspaces/{id}/switch", a.switchWorkspace)
 	origin := http.NewCrossOriginProtection()
 	return a.headers(origin.Handler(mux))

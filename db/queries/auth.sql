@@ -13,7 +13,7 @@ VALUES ($1, $2, sqlc.arg(email)::text, $3, $4) RETURNING *;
 
 -- name: ListUsers :many
 SELECT id, workspace_id, name, email, role, active, created_at, updated_at
-FROM users WHERE workspace_id = $1 ORDER BY name;
+FROM users WHERE workspace_id = $1 AND active ORDER BY name;
 
 -- name: GetUserByEmail :one
 SELECT * FROM users WHERE lower(email) = lower($1) AND active = true LIMIT 1;

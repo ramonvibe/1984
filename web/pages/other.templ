@@ -122,6 +122,12 @@ templ Settings(data SettingsData) {
 								if data.Base.User.Role=="admin" && user.Role!="admin" {
 									<form method="post" action={ fmt.Sprintf("/settings/users/%d/role",user.ID) } class="inline-form">@components.CSRF(data.Base.CSRF)<button class="button small-button">Tornar administrador</button></form>
 								}
+								if data.Base.User.Role=="admin" {
+									<form method="post" action={ fmt.Sprintf("/settings/users/%d/password",user.ID) } class="inline-form">@components.CSRF(data.Base.CSRF)<input type="password" name="password" required minlength="12" maxlength="256" placeholder="Nova senha" aria-label="Nova senha"/><button class="button small-button">Redefinir senha</button></form>
+								}
+								if data.Base.User.Role=="admin" && user.ID!=data.Base.User.ID {
+									<form method="post" action={ fmt.Sprintf("/settings/users/%d/delete",user.ID) } class="inline-form" onsubmit="return confirm('Remover este usuário do workspace?')">@components.CSRF(data.Base.CSRF)<button class="button small-button">Remover</button></form>
+								}
 							</td></tr>
 						}
 					</tbody>

@@ -298,7 +298,7 @@ func (q *Queries) ListLabels(ctx context.Context, workspaceID int64) ([]Label, e
 
 const listUsers = `-- name: ListUsers :many
 SELECT id, workspace_id, name, email, role, active, created_at, updated_at
-FROM users WHERE workspace_id = $1 ORDER BY name
+FROM users WHERE workspace_id = $1 AND active ORDER BY name
 `
 
 type ListUsersRow struct {
