@@ -29,7 +29,8 @@ DELETE FROM sessions WHERE expires_at < now();
 
 -- name: GetSessionUser :one
 SELECT u.id, u.workspace_id, u.name, u.email, u.role, u.active, u.created_at, u.updated_at,
-       w.name AS workspace_name, w.app_name, w.logo IS NOT NULL AS has_logo, w.sprints_are_releases, u.avatar IS NOT NULL AS has_avatar
+       w.name AS workspace_name, w.app_name, (w.logo IS NOT NULL)::boolean AS has_logo,
+       w.sprints_are_releases, (u.avatar IS NOT NULL)::boolean AS has_avatar
 FROM sessions s
 JOIN users u ON u.id = s.user_id
 JOIN workspaces w ON w.id = u.workspace_id

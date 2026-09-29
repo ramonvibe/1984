@@ -8,7 +8,9 @@ WHERE user_id = $1 AND issue_id = $2 AND ended_at IS NULL RETURNING *;
 
 -- name: AddTimeEntry :one
 INSERT INTO time_entries (issue_id, user_id, started_at, ended_at, duration_seconds, description)
-VALUES ($1, $2, $3, $3 + make_interval(secs => $4), $4, $5) RETURNING *;
+VALUES (sqlc.arg(issue_id), sqlc.arg(user_id), sqlc.arg(started_at)::timestamptz,
+        sqlc.arg(started_at)::timestamptz + make_interval(secs => sqlc.arg(duration_seconds)::double precision),
+        sqlc.arg(duration_seconds), sqlc.arg(description)) RETURNING *;
 
 -- name: GetActiveTimer :one
 SELECT te.*, i.number AS issue_number, i.title AS issue_title, p.key AS project_key

@@ -28,6 +28,7 @@ import (
 	"github.com/ramon/trackline/internal/project"
 	"github.com/ramon/trackline/internal/release"
 	"github.com/ramon/trackline/internal/timetracking"
+	"github.com/ramon/trackline/internal/updatecheck"
 	"github.com/ramon/trackline/web/layouts"
 	"github.com/ramon/trackline/web/pages"
 	"github.com/ramon/trackline/web/static"
@@ -44,6 +45,7 @@ type App struct {
 	Time     timetracking.Service
 	Releases release.Service
 	GitHub   github.Service
+	Updates  *updatecheck.Checker
 	loginMu  sync.Mutex
 	attempts map[string]attempt
 }
@@ -64,7 +66,7 @@ func New(pool *pgxpool.Pool, configuration config.Config) (*App, error) {
 		return nil, err
 	}
 	q := database.New(pool)
-	return &App{Config: configuration, Pool: pool, Queries: q, Auth: auth.Service{Pool: pool, Queries: q}, Projects: project.Service{Pool: pool, Queries: q}, Issues: issue.Service{Pool: pool, Queries: q}, Comments: comment.Service{Pool: pool}, Time: timetracking.Service{Pool: pool}, Releases: release.Service{Pool: pool, Queries: q, GitHub: client}, GitHub: github.Service{Pool: pool, Queries: q, Client: client}, attempts: map[string]attempt{}}, nil
+	return &App{Config: configuration, Pool: pool, Queries: q, Auth: auth.Service{Pool: pool, Queries: q}, Projects: project.Service{Pool: pool, Queries: q}, Issues: issue.Service{Pool: pool, Queries: q}, Comments: comment.Service{Pool: pool}, Time: timetracking.Service{Pool: pool}, Releases: release.Service{Pool: pool, Queries: q, GitHub: client}, GitHub: github.Service{Pool: pool, Queries: q, Client: client}, Updates: updatecheck.New(configuration.UpdateCheckURL, configuration.AppVersion), attempts: map[string]attempt{}}, nil
 }
 
 func (a *App) Handler() http.Handler {
@@ -122,6 +124,7 @@ func (a *App) Handler() http.Handler {
 	private("GET /search", a.search)
 	private("GET /settings", a.settings)
 	private("GET /profile/avatar", a.profileAvatar)
+	private("GET /users/{id}/avatar", a.userAvatar)
 	private("POST /settings/profile", a.updateProfile)
 	private("POST /settings/users", a.addUser)
 	private("POST /settings/labels", a.addLabel)
@@ -232,6 +235,7 @@ func User(r *http.Request) auth.User { user, _ := r.Context().Value(userKey).(au
 func csrf(r *http.Request) string    { value, _ := r.Context().Value(csrfKey).(string); return value }
 func (a *App) base(r *http.Request) (layouts.Data, error) {
 	data := layouts.Data{User: User(r), CSRF: csrf(r), Path: r.URL.Path, AppName: User(r).AppName, HasLogo: User(r).HasLogo}
+	data.Update = a.Updates.Snapshot()
 	rows, workspacesErr := a.Pool.Query(r.Context(), "SELECT DISTINCT w.id,w.name FROM users u JOIN workspaces w ON w.id=u.workspace_id WHERE lower(u.email)=lower($1) AND u.active ORDER BY w.name", data.User.Email)
 	if workspacesErr != nil {
 		return data, workspacesErr

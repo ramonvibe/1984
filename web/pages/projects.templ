@@ -94,7 +94,7 @@ templ Project(data ProjectData) {
 						<div class="panel-heading"><h3>Membros do projeto</h3></div>
 						<div class="member-list">
 							for _, member := range data.Members {
-								<span class="member-chip"><span class="avatar small">{ layouts.Initial(member.Name) }</span>{ member.Name }</span>
+								<span class="member-chip">@components.UserAvatar(member.ID, member.Name, true)<span>{ member.Name }</span></span>
 							}
 						</div>
 						if len(data.Members)==0 {
@@ -160,7 +160,7 @@ templ IssueGroup(name string, items []database.ListProjectIssuesRow, sprintID in
 	<details class="task-group" open><summary>{ name } <span class="muted tiny">{ fmt.Sprint(issueGroupCount(items,sprintID)) }</span></summary><div class="table-scroll"><table class="issue-table"><thead><tr><th>Tarefa</th><th>Título</th><th>Status</th><th>Prioridade</th><th>Responsável</th></tr></thead><tbody>
 		for _, item := range items {
 			if (sprintID==0 && !item.SprintID.Valid) || item.SprintID.Int64==sprintID {
-				<tr><td><a class="mono muted" href={ templ.SafeURL("/issues/"+issue.Reference(item.ProjectKey,item.Number)) }>{ issue.Reference(item.ProjectKey,item.Number) }</a></td><td><a class="issue-title" href={ templ.SafeURL("/issues/"+issue.Reference(item.ProjectKey,item.Number)) }>{ item.Title }</a></td><td>@components.Badge(item.Status)</td><td>@components.Priority(item.Priority)</td><td>{ components.Text(item.AssigneeName,"Não atribuída") }</td></tr>
+				<tr><td><a class="mono muted" href={ templ.SafeURL("/issues/"+issue.Reference(item.ProjectKey,item.Number)) }>{ issue.Reference(item.ProjectKey,item.Number) }</a></td><td><a class="issue-title" href={ templ.SafeURL("/issues/"+issue.Reference(item.ProjectKey,item.Number)) }>{ item.Title }</a></td><td>@components.Badge(item.Status)</td><td>@components.Priority(item.Priority)</td><td><span class="card-assignee">@components.UserAvatar(item.AssigneeID.Int64, components.Text(item.AssigneeName,"—"), true)<span>{ components.Text(item.AssigneeName,"Não atribuída") }</span></span></td></tr>
 			}
 		}
 	</tbody></table></div></details>
@@ -229,7 +229,7 @@ templ ProjectSettings(data ProjectData) {
 			<div class="panel-heading"><h2>Membros do projeto</h2></div>
 			for _, member := range data.Members {
 				<div class="settings-row">
-					<span>{ member.Name } <small class="muted">{ member.Email }</small></span>
+					<span class="member-chip">@components.UserAvatar(member.ID, member.Name, true)<span>{ member.Name } <small class="muted">{ member.Email }</small></span></span>
 					<form method="post" action={ "/projects/" + data.Project.Key + "/members" }>
 						@components.CSRF(data.Base.CSRF)
 						<input

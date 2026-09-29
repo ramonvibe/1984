@@ -52,7 +52,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) er
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (workspace_id, name, email, password_hash, role)
-VALUES ($1, $2, $5::text, $3, $4) RETURNING id, workspace_id, name, email, password_hash, role, active, created_at, updated_at
+VALUES ($1, $2, $5::text, $3, $4) RETURNING id, workspace_id, name, email, password_hash, role, active, created_at, updated_at, avatar, avatar_content_type
 `
 
 type CreateUserParams struct {
@@ -82,12 +82,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Avatar,
+		&i.AvatarContentType,
 	)
 	return i, err
 }
 
 const createWorkspace = `-- name: CreateWorkspace :one
-INSERT INTO workspaces (name) VALUES ($1) RETURNING id, name, created_at, updated_at
+INSERT INTO workspaces (name) VALUES ($1) RETURNING id, name, created_at, updated_at, app_name, logo, logo_content_type, sprints_are_releases
 `
 
 func (q *Queries) CreateWorkspace(ctx context.Context, name string) (Workspace, error) {
@@ -98,6 +100,10 @@ func (q *Queries) CreateWorkspace(ctx context.Context, name string) (Workspace, 
 		&i.Name,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.AppName,
+		&i.Logo,
+		&i.LogoContentType,
+		&i.SprintsAreReleases,
 	)
 	return i, err
 }
@@ -122,7 +128,8 @@ func (q *Queries) DeleteSession(ctx context.Context, tokenHash []byte) error {
 
 const getSessionUser = `-- name: GetSessionUser :one
 SELECT u.id, u.workspace_id, u.name, u.email, u.role, u.active, u.created_at, u.updated_at,
-       w.name AS workspace_name, w.app_name, w.logo IS NOT NULL AS has_logo, w.sprints_are_releases, u.avatar IS NOT NULL AS has_avatar
+       w.name AS workspace_name, w.app_name, (w.logo IS NOT NULL)::boolean AS has_logo,
+       w.sprints_are_releases, (u.avatar IS NOT NULL)::boolean AS has_avatar
 FROM sessions s
 JOIN users u ON u.id = s.user_id
 JOIN workspaces w ON w.id = u.workspace_id
@@ -130,19 +137,19 @@ WHERE s.token_hash = $1 AND s.expires_at > now() AND u.active = true
 `
 
 type GetSessionUserRow struct {
-	ID            int64              `json:"id"`
-	WorkspaceID   int64              `json:"workspace_id"`
-	Name          string             `json:"name"`
-	Email         string             `json:"email"`
-	Role          string             `json:"role"`
-	Active        bool               `json:"active"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
-	WorkspaceName string             `json:"workspace_name"`
-	AppName       string             `json:"app_name"`
-	HasLogo       bool               `json:"has_logo"`
-	SprintsAreReleases bool          `json:"sprints_are_releases"`
-	HasAvatar          bool          `json:"has_avatar"`
+	ID                 int64              `json:"id"`
+	WorkspaceID        int64              `json:"workspace_id"`
+	Name               string             `json:"name"`
+	Email              string             `json:"email"`
+	Role               string             `json:"role"`
+	Active             bool               `json:"active"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	WorkspaceName      string             `json:"workspace_name"`
+	AppName            string             `json:"app_name"`
+	HasLogo            bool               `json:"has_logo"`
+	SprintsAreReleases bool               `json:"sprints_are_releases"`
+	HasAvatar          bool               `json:"has_avatar"`
 }
 
 func (q *Queries) GetSessionUser(ctx context.Context, tokenHash []byte) (GetSessionUserRow, error) {
@@ -167,7 +174,7 @@ func (q *Queries) GetSessionUser(ctx context.Context, tokenHash []byte) (GetSess
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, workspace_id, name, email, password_hash, role, active, created_at, updated_at FROM users WHERE lower(email) = lower($1) AND active = true LIMIT 1
+SELECT id, workspace_id, name, email, password_hash, role, active, created_at, updated_at, avatar, avatar_content_type FROM users WHERE lower(email) = lower($1) AND active = true LIMIT 1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, lower string) (User, error) {
@@ -183,12 +190,14 @@ func (q *Queries) GetUserByEmail(ctx context.Context, lower string) (User, error
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Avatar,
+		&i.AvatarContentType,
 	)
 	return i, err
 }
 
 const getWorkspace = `-- name: GetWorkspace :one
-SELECT id, name, created_at, updated_at FROM workspaces WHERE id = $1
+SELECT id, name, created_at, updated_at, app_name, logo, logo_content_type, sprints_are_releases FROM workspaces WHERE id = $1
 `
 
 func (q *Queries) GetWorkspace(ctx context.Context, id int64) (Workspace, error) {
@@ -199,6 +208,10 @@ func (q *Queries) GetWorkspace(ctx context.Context, id int64) (Workspace, error)
 		&i.Name,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.AppName,
+		&i.Logo,
+		&i.LogoContentType,
+		&i.SprintsAreReleases,
 	)
 	return i, err
 }
@@ -226,7 +239,7 @@ func (q *Queries) GetWorkspaceLabel(ctx context.Context, arg GetWorkspaceLabelPa
 }
 
 const getWorkspaceUser = `-- name: GetWorkspaceUser :one
-SELECT id, workspace_id, name, email, password_hash, role, active, created_at, updated_at FROM users WHERE id = $1 AND workspace_id = $2 AND active = true
+SELECT id, workspace_id, name, email, password_hash, role, active, created_at, updated_at, avatar, avatar_content_type FROM users WHERE id = $1 AND workspace_id = $2 AND active = true
 `
 
 type GetWorkspaceUserParams struct {
@@ -247,6 +260,8 @@ func (q *Queries) GetWorkspaceUser(ctx context.Context, arg GetWorkspaceUserPara
 		&i.Active,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Avatar,
+		&i.AvatarContentType,
 	)
 	return i, err
 }

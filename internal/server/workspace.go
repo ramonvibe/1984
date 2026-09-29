@@ -11,6 +11,7 @@ import (
 	"github.com/ramon/trackline/internal/issue"
 	"github.com/ramon/trackline/internal/validate"
 	"github.com/ramon/trackline/web/pages"
+	"html"
 	"io"
 	"net/http"
 	"strings"
@@ -279,10 +280,31 @@ func (a *App) updateProfile(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (a *App) profileAvatar(w http.ResponseWriter, r *http.Request) error {
-	var contentType string
-	var body []byte
-	if err := a.Pool.QueryRow(r.Context(), "SELECT avatar_content_type,avatar FROM users WHERE id=$1 AND avatar IS NOT NULL", User(r).ID).Scan(&contentType, &body); err != nil {
+	return a.serveUserAvatar(w, r, User(r).ID)
+}
+
+func (a *App) userAvatar(w http.ResponseWriter, r *http.Request) error {
+	id, err := parseID(r.PathValue("id"))
+	if err != nil {
 		return err
+	}
+	return a.serveUserAvatar(w, r, id)
+}
+
+func (a *App) serveUserAvatar(w http.ResponseWriter, r *http.Request, id int64) error {
+	var name, contentType string
+	var body []byte
+	if err := a.Pool.QueryRow(r.Context(), "SELECT name,coalesce(avatar_content_type,''),coalesce(avatar,''::bytea) FROM users WHERE id=$1 AND workspace_id=$2 AND active=true", id, User(r).WorkspaceID).Scan(&name, &contentType, &body); err != nil {
+		return err
+	}
+	if len(body) == 0 {
+		initial := "—"
+		for _, character := range name {
+			initial = string(character)
+			break
+		}
+		contentType = "image/svg+xml"
+		body = []byte(fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="64" height="64" rx="32" fill="#e9e4da"/><text x="32" y="40" text-anchor="middle" font-family="sans-serif" font-size="28" font-weight="600" fill="#7c7060">%s</text></svg>`, html.EscapeString(initial)))
 	}
 	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("Content-Length", fmt.Sprint(len(body)))

@@ -89,6 +89,14 @@ templ Empty(title, description string) {
 	<div class="empty-state"><span class="empty-icon" aria-hidden="true">◇</span><h3>{ title }</h3><p>{ description }</p></div>
 }
 
+templ UserAvatar(id int64, name string, small bool) {
+	if id > 0 {
+		<img class={ "avatar avatar-image", templ.KV("small", small) } src={ templ.SafeURL(fmt.Sprintf("/users/%d/avatar", id)) } alt=""/>
+	} else {
+		<span class={ "avatar", templ.KV("small", small) } aria-hidden="true">{ initial(FirstName(name)) }</span>
+	}
+}
+
 templ Stat(label, value string) {
 	<div class="stat"><span>{ label }</span><strong>{ value }</strong></div>
 }
@@ -142,7 +150,7 @@ templ IssueCard(item database.ListBoardIssuesRow, csrf ...string) {
 		<div class="card-bottom">
 			@Badge(item.Type)
 			<span class="card-assignee" title={ Text(item.AssigneeName, "Não atribuída") }>
-				<span class="avatar small" aria-hidden="true">{ initial(FirstName(Text(item.AssigneeName,"—"))) }</span>
+				@UserAvatar(item.AssigneeID.Int64, Text(item.AssigneeName,"—"), true)
 				<span class="assignee-name">{ FirstName(Text(item.AssigneeName,"Não atribuída")) }</span>
 			</span>
 		</div>

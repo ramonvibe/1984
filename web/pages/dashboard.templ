@@ -67,7 +67,7 @@ templ RecentActivity(items []database.ListRecentActivityRow) {
 	<ol class="timeline">
 		for _, item := range items {
 			<li>
-				<span class="timeline-dot"></span>
+				@components.UserAvatar(item.ActorID.Int64, components.Text(item.ActorName,"GitHub"), true)
 				<div>
 					<strong>{ components.Text(item.ActorName,"GitHub") }</strong> { activity.Human(item.Kind,item.Data) }
 					if item.IssueID.Valid {

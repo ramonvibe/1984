@@ -108,6 +108,15 @@ type IssueLabel struct {
 	LabelID int64 `json:"label_id"`
 }
 
+type IssueSubtask struct {
+	ID        int64              `json:"id"`
+	IssueID   int64              `json:"issue_id"`
+	Title     string             `json:"title"`
+	Completed bool               `json:"completed"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
 type Label struct {
 	ID          int64              `json:"id"`
 	WorkspaceID int64              `json:"workspace_id"`
@@ -181,20 +190,34 @@ type TimeEntry struct {
 }
 
 type User struct {
-	ID           int64              `json:"id"`
-	WorkspaceID  int64              `json:"workspace_id"`
-	Name         string             `json:"name"`
-	Email        string             `json:"email"`
-	PasswordHash string             `json:"password_hash"`
-	Role         string             `json:"role"`
-	Active       bool               `json:"active"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	ID                int64              `json:"id"`
+	WorkspaceID       int64              `json:"workspace_id"`
+	Name              string             `json:"name"`
+	Email             string             `json:"email"`
+	PasswordHash      string             `json:"password_hash"`
+	Role              string             `json:"role"`
+	Active            bool               `json:"active"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	Avatar            []byte             `json:"avatar"`
+	AvatarContentType pgtype.Text        `json:"avatar_content_type"`
 }
 
 type Workspace struct {
-	ID        int64              `json:"id"`
-	Name      string             `json:"name"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID                 int64              `json:"id"`
+	Name               string             `json:"name"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
+	AppName            string             `json:"app_name"`
+	Logo               []byte             `json:"logo"`
+	LogoContentType    pgtype.Text        `json:"logo_content_type"`
+	SprintsAreReleases bool               `json:"sprints_are_releases"`
+}
+
+type WorkspaceInvite struct {
+	TokenHash   []byte             `json:"token_hash"`
+	WorkspaceID int64              `json:"workspace_id"`
+	CreatedBy   int64              `json:"created_by"`
+	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }

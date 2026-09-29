@@ -118,7 +118,7 @@ templ Settings(data SettingsData) {
 					<thead><tr><th>Nome</th><th>Email</th><th>Função</th></tr></thead>
 					<tbody>
 						for _, user := range data.Users {
-							<tr><td>{ user.Name }</td><td>{ user.Email }</td><td>{ layouts.Role(user.Role) }
+							<tr><td><span class="card-assignee">@components.UserAvatar(user.ID, user.Name, true)<span>{ user.Name }</span></span></td><td>{ user.Email }</td><td>{ layouts.Role(user.Role) }
 								if data.Base.User.Role=="admin" && user.Role!="admin" {
 									<form method="post" action={ fmt.Sprintf("/settings/users/%d/role",user.ID) } class="inline-form">@components.CSRF(data.Base.CSRF)<button class="button small-button">Tornar administrador</button></form>
 								}

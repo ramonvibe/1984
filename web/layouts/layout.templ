@@ -5,6 +5,7 @@ import (
 	"github.com/ramon/trackline/internal/auth"
 	"github.com/ramon/trackline/internal/database"
 	"github.com/ramon/trackline/internal/issue"
+	"github.com/ramon/trackline/internal/updatecheck"
 )
 
 type Data struct {
@@ -16,6 +17,7 @@ type Data struct {
 	AppName  string
 	HasLogo  bool
 	Workspaces []WorkspaceOption
+	Update updatecheck.Update
 }
 type WorkspaceOption struct { ID int64; Name string }
 
@@ -95,6 +97,9 @@ templ Shell(data Data, title string) {
 			</aside>
 			<div class="app-content">
 				<header class="topbar"><span class="breadcrumb">{ data.User.WorkspaceName } <span>/</span> { title }</span><div class="topbar-actions"><button class="theme-toggle" type="button" aria-label="Alternar tema" title="Alternar tema"><span class="theme-light" aria-hidden="true">☾</span><span class="theme-dark" aria-hidden="true">☀</span></button><form role="search" action="/search" method="get"><label class="search-box"><span aria-hidden="true">⌕</span><input name="q" type="search" placeholder="Buscar tarefas, projetos, versões…" aria-label="Buscar tarefas, projetos e versões" maxlength="100"/><kbd>/</kbd></label></form></div></header>
+				if data.Update.Available {
+					<div class="update-banner" role="status"><span>Nova versão disponível: <strong>v{ data.Update.Latest }</strong></span><a href={ templ.SafeURL(data.Update.URL) } target="_blank" rel="noopener noreferrer">Ver atualização no GitHub ↗</a></div>
+				}
 				<main id="main" class="main">{ children... }
 </main>
 				<footer class="app-footer">Tudo que uma pequena equipe de software precisa.</footer>

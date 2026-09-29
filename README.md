@@ -127,8 +127,12 @@ A instalação via Docker já possui valores locais para começar. Para outra in
 | `GITHUB_APP_SLUG` | identificador do GitHub App | vazio |
 | `GITHUB_PRIVATE_KEY` | chave RSA do GitHub App em PEM | vazio |
 | `GITHUB_WEBHOOK_SECRET` | segredo do webhook, mínimo de 32 bytes | vazio |
+| `APP_VERSION` | versão instalada usada na comparação | `0.1.0` |
+| `UPDATE_CHECK_URL` | rota da última release no GitHub | repositório oficial do 1984 |
 
 A integração com GitHub é opcional. Sem essas quatro variáveis, todo o restante funciona normalmente.
+
+O 1984 consulta a release mais recente do repositório uma vez ao iniciar e depois a cada 24 horas. Quando a tag publicada for superior a `APP_VERSION`, aparece um aviso no topo. Ao publicar uma versão, use tags semânticas como `v0.2.0` e atualize `APP_VERSION` na instalação.
 
 ## Publicação
 

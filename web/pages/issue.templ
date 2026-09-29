@@ -131,7 +131,7 @@ templ IssueDetail(data IssueData) {
 					</details>
 					<div class="time-summary">
 						for _, member := range data.TimeSummary {
-							<div><span class="avatar small">{ layouts.Initial(member.Name) }</span><span>{ member.Name }</span><strong>{ format.Duration(member.Seconds) }</strong></div>
+							<div>@components.UserAvatar(member.UserID, member.Name, true)<span>{ member.Name }</span><strong>{ format.Duration(member.Seconds) }</strong></div>
 						}
 					</div>
 					if len(data.Time)>0 {
@@ -143,7 +143,7 @@ templ IssueDetail(data IssueData) {
 									<tbody>
 										for _, entry := range data.Time {
 											<tr>
-												<td>{ entry.UserName }</td>
+										<td><span class="card-assignee">@components.UserAvatar(entry.UserID, entry.UserName, true)<span>{ entry.UserName }</span></span></td>
 											<td>{ format.ShortDate(entry.StartedAt.Time.UTC()) }</td>
 												<td>
 													if entry.EndedAt.Valid {
@@ -165,7 +165,7 @@ templ IssueDetail(data IssueData) {
 					<div class="section-heading"><h2>Comentários</h2><span class="muted tiny">{ fmt.Sprint(len(data.Comments)) }</span></div>
 					for _, comment := range data.Comments {
 						<article class="comment">
-							<span class="avatar">{ layouts.Initial(comment.UserName) }</span>
+							@components.UserAvatar(comment.UserID, comment.UserName, false)
 							<div class="comment-body">
 								<header><strong>{ comment.UserName }</strong><time class="muted tiny">{ format.Relative(comment.CreatedAt.Time) }</time></header>
 								<div class="markdown">
@@ -184,7 +184,7 @@ templ IssueDetail(data IssueData) {
 					<div class="section-heading"><h2>Atividade</h2></div>
 					<ol class="timeline">
 						for _, event := range data.Activity {
-							<li><span class="timeline-dot"></span><div><strong>{ components.Text(event.ActorName,"GitHub") }</strong> { activity.Human(event.Kind,event.Data) }<time class="muted tiny">{ format.Relative(event.CreatedAt.Time) }</time></div></li>
+							<li>@components.UserAvatar(event.ActorID.Int64, components.Text(event.ActorName,"GitHub"), true)<div><strong>{ components.Text(event.ActorName,"GitHub") }</strong> { activity.Human(event.Kind,event.Data) }<time class="muted tiny">{ format.Relative(event.CreatedAt.Time) }</time></div></li>
 						}
 					</ol>
 				</section>

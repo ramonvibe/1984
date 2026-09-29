@@ -45,7 +45,7 @@ LIMIT $4 OFFSET $5;
 
 -- name: ListBoardIssues :many
 SELECT i.id, i.number, i.title, i.type, i.status, i.priority, p.key AS project_key,
-       assignee.name AS assignee_name,
+       assignee.id AS assignee_id, assignee.name AS assignee_name,
        coalesce(string_agg(DISTINCT l.name, ',' ORDER BY l.name), '') AS label_names
 FROM issues i
 JOIN projects p ON p.id = i.project_id
@@ -56,7 +56,7 @@ WHERE i.project_id = $1 AND i.status <> 'canceled'
   AND (sqlc.arg(sprint_filter)::bigint = 0
        OR (sqlc.arg(sprint_filter)::bigint = -1 AND i.sprint_id IS NULL)
        OR i.sprint_id = sqlc.arg(sprint_filter)::bigint)
-GROUP BY i.id, p.key, assignee.name
+GROUP BY i.id, p.key, assignee.id, assignee.name
 ORDER BY i.updated_at DESC LIMIT 500;
 
 -- name: SetIssueLabels :exec

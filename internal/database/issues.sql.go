@@ -194,7 +194,7 @@ func (q *Queries) GetIssueByKey(ctx context.Context, arg GetIssueByKeyParams) (G
 
 const listBoardIssues = `-- name: ListBoardIssues :many
 SELECT i.id, i.number, i.title, i.type, i.status, i.priority, p.key AS project_key,
-       assignee.name AS assignee_name,
+       assignee.id AS assignee_id, assignee.name AS assignee_name,
        coalesce(string_agg(DISTINCT l.name, ',' ORDER BY l.name), '') AS label_names
 FROM issues i
 JOIN projects p ON p.id = i.project_id
@@ -205,7 +205,7 @@ WHERE i.project_id = $1 AND i.status <> 'canceled'
   AND ($2::bigint = 0
        OR ($2::bigint = -1 AND i.sprint_id IS NULL)
        OR i.sprint_id = $2::bigint)
-GROUP BY i.id, p.key, assignee.name
+GROUP BY i.id, p.key, assignee.id, assignee.name
 ORDER BY i.updated_at DESC LIMIT 500
 `
 
@@ -222,6 +222,7 @@ type ListBoardIssuesRow struct {
 	Status       string      `json:"status"`
 	Priority     string      `json:"priority"`
 	ProjectKey   string      `json:"project_key"`
+	AssigneeID   pgtype.Int8 `json:"assignee_id"`
 	AssigneeName pgtype.Text `json:"assignee_name"`
 	LabelNames   interface{} `json:"label_names"`
 }
@@ -243,6 +244,7 @@ func (q *Queries) ListBoardIssues(ctx context.Context, arg ListBoardIssuesParams
 			&i.Status,
 			&i.Priority,
 			&i.ProjectKey,
+			&i.AssigneeID,
 			&i.AssigneeName,
 			&i.LabelNames,
 		); err != nil {

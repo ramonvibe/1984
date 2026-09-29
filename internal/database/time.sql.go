@@ -13,7 +13,9 @@ import (
 
 const addTimeEntry = `-- name: AddTimeEntry :one
 INSERT INTO time_entries (issue_id, user_id, started_at, ended_at, duration_seconds, description)
-VALUES ($1, $2, $3, $3 + make_interval(secs => $4), $4, $5) RETURNING id, issue_id, user_id, started_at, ended_at, duration_seconds, description, created_at
+VALUES ($1, $2, $3::timestamptz,
+        $3::timestamptz + make_interval(secs => $4::double precision),
+        $4, $5) RETURNING id, issue_id, user_id, started_at, ended_at, duration_seconds, description, created_at
 `
 
 type AddTimeEntryParams struct {
