@@ -32,3 +32,26 @@ func TestSprintToolbar(t *testing.T) {
 		t.Fatal("sprint iniciada deve ocultar backlog")
 	}
 }
+
+func TestIssueListShowsSprintProgressBeforeBacklog(t *testing.T) {
+	data := ProjectData{
+		Project: database.Project{Key: "PLAT"},
+		Sprints: []database.Sprint{{ID: 7, Name: "Sprint atual"}},
+		Issues: []database.ListProjectIssuesRow{
+			{ProjectKey: "PLAT", Number: 1, Title: "Concluída", Status: "done", SprintID: pgtype.Int8{Int64: 7, Valid: true}},
+			{ProjectKey: "PLAT", Number: 2, Title: "Em andamento", Status: "todo", SprintID: pgtype.Int8{Int64: 7, Valid: true}},
+			{ProjectKey: "PLAT", Number: 3, Title: "Pendente", Status: "backlog"},
+		},
+	}
+	var html strings.Builder
+	if err := IssueList(data).Render(context.Background(), &html); err != nil {
+		t.Fatal(err)
+	}
+	output := html.String()
+	if !strings.Contains(output, "value=\"50\"") || !strings.Contains(output, "50%") {
+		t.Fatal("sprint deve mostrar 50% de progresso")
+	}
+	if strings.Index(output, "Sprint atual") > strings.Index(output, "Backlog") {
+		t.Fatal("sprint deve aparecer antes do backlog")
+	}
+}

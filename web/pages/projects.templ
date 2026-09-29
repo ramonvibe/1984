@@ -148,16 +148,16 @@ templ IssueList(data ProjectData) {
 		if len(data.Issues)==0 {
 			@components.Empty("Nenhuma tarefa aqui", "Crie uma tarefa ou ajuste os filtros.")
 		} else {
-			@IssueGroup("Backlog", data.Issues, 0)
 			for _, sprint := range data.Sprints {
 				@IssueGroup(sprint.Name, data.Issues, sprint.ID)
 			}
+			@IssueGroup("Backlog", data.Issues, 0)
 		}
 	</section>
 }
 
 templ IssueGroup(name string, items []database.ListProjectIssuesRow, sprintID int64) {
-	<details class="task-group" open><summary>{ name } <span class="muted tiny">{ fmt.Sprint(issueGroupCount(items,sprintID)) }</span></summary><div class="table-scroll"><table class="issue-table"><thead><tr><th>Tarefa</th><th>Título</th><th>Status</th><th>Prioridade</th><th>Responsável</th></tr></thead><tbody>
+	<details class="task-group" open><summary>{ name } if sprintID>0 { <span class="sprint-progress"><progress value={ fmt.Sprint(sprintProgress(items,sprintID)) } max="100" aria-label="Progresso da sprint"></progress><span>{ fmt.Sprintf("%d%%",sprintProgress(items,sprintID)) }</span></span> } <span class="task-group-count">{ fmt.Sprint(issueGroupCount(items,sprintID)) }</span></summary><div class="table-scroll"><table class="issue-table"><thead><tr><th>Tarefa</th><th>Título</th><th>Status</th><th>Prioridade</th><th>Responsável</th></tr></thead><tbody>
 		for _, item := range items {
 			if (sprintID==0 && !item.SprintID.Valid) || item.SprintID.Int64==sprintID {
 				<tr><td><a class="mono muted" href={ templ.SafeURL("/issues/"+issue.Reference(item.ProjectKey,item.Number)) }>{ issue.Reference(item.ProjectKey,item.Number) }</a></td><td><a class="issue-title" href={ templ.SafeURL("/issues/"+issue.Reference(item.ProjectKey,item.Number)) }>{ item.Title }</a></td><td>@components.Badge(item.Status)</td><td>@components.Priority(item.Priority)</td><td><span class="card-assignee">@components.UserAvatar(item.AssigneeID.Int64, components.Text(item.AssigneeName,"—"), true)<span>{ components.Text(item.AssigneeName,"Não atribuída") }</span></span></td></tr>
@@ -167,6 +167,8 @@ templ IssueGroup(name string, items []database.ListProjectIssuesRow, sprintID in
 }
 
 func issueGroupCount(items []database.ListProjectIssuesRow,sprintID int64) int { n:=0; for _,item:=range items { if (sprintID==0&&!item.SprintID.Valid)||item.SprintID.Int64==sprintID { n++ } }; return n }
+
+func sprintProgress(items []database.ListProjectIssuesRow, sprintID int64) int { total,done:=0,0; for _,item:=range items { if item.SprintID.Valid&&item.SprintID.Int64==sprintID { total++; if item.Status=="done" { done++ } } }; if total==0 { return 0 }; return done*100/total }
 
 func issuePageURL(data ProjectData, page int) string {
 	return "/projects/" + data.Project.Key + "/issues?" + url.Values{"page": {fmt.Sprint(page)}, "status": {data.Status}, "type": {data.Type}}.Encode()
